@@ -143,6 +143,7 @@ save_stage = Stage(name="Save", workers=5, tasks=[save_to_db])
 pipeline = Pipeline(stages=[upload_stage, check_stage, download_stage, save_stage])
 
 # Process batches efficiently
+batches = ["batch1", "batch2", "batch3"]
 results = await pipeline.run(batches)
 ```
 
@@ -227,29 +228,35 @@ Track every item as it flows through your pipeline with **StatusTracker**. Get r
 ```python
 from antflow import Pipeline, Stage, StatusTracker
 
-tracker = StatusTracker()
+# 1. Define a callback for real-time updates
+async def log_event(event):
+    print(f"Item {event.item_id}: {event.status} @ {event.stage}")
+
+tracker = StatusTracker(on_status_change=log_event)
+
+# Define stages
+stage1 = Stage(name="Fetch", workers=5, tasks=[fetch])
+stage2 = Stage(name="Process", workers=3, tasks=[process])
+stage3 = Stage(name="Save", workers=5, tasks=[save])
 
 pipeline = Pipeline(
     stages=[stage1, stage2, stage3],
     status_tracker=tracker
 )
 
+# 2. Run pipeline (logs will print in real-time)
 results = await pipeline.run(items)
 
-# Query current status
+# 3. Get final statistics
 stats = tracker.get_stats()
 print(f"Completed: {stats['completed']}")
 print(f"Failed: {stats['failed']}")
 
-# Get specific item status
-status = tracker.get_status(item_id=42)
-print(f"Item 42: {status.status} @ {status.stage}")
-
-# Get all failed items
-failed = tracker.get_by_status("failed")
-for event in failed:
-    print(f"Item {event.item_id}: {event.metadata['error']}")
+# Get full history for an item
+history = tracker.get_history(item_id=42)
 ```
+
+See the [examples/](examples/) directory for more advanced usage, including a **Rich Dashboard** example (`examples/rich_dashboard.py`).
 
 ---
 
@@ -257,11 +264,11 @@ for event in failed:
 
 AntFlow has comprehensive documentation to help you get started and master advanced features:
 
-### 📚 Getting Started
+### 🚀 Getting Started
 - [Quick Start Guide](docs/getting-started/quickstart.md) - Get up and running in minutes
 - [Installation Guide](docs/getting-started/installation.md) - Installation instructions
 
-### 🛠️ User Guides
+### 📚 User Guides
 - [AsyncExecutor Guide](docs/user-guide/executor.md) - Using the concurrent.futures-style API
 - [Pipeline Guide](docs/user-guide/pipeline.md) - Building multi-stage workflows
 - [Dashboard Guide](docs/user-guide/dashboard.md) - Real-time monitoring and dashboards
