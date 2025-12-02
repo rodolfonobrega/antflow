@@ -107,7 +107,8 @@ async with AsyncExecutor(max_workers=5) as executor:
 
 ```python
 async with AsyncExecutor(max_workers=3) as executor:
-    # Retry up to 3 times (4 attempts total) with 0.5s delay
+    # Retry up to 3 times (4 attempts total) with exponential backoff
+    # retry_delay sets the initial multiplier (e.g., 0.5s, 1s, 2s...)
     future = executor.submit(
         flaky_task, 
         arg, 

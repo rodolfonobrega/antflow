@@ -165,9 +165,11 @@ class AsyncExecutor:
             raise ExecutorShutdownError("Cannot submit tasks to a shutdown executor")
 
         if retries > 0:
-            from tenacity import retry, stop_after_attempt, wait_fixed
+            from tenacity import retry, stop_after_attempt, wait_exponential
 
-            @retry(stop=stop_after_attempt(retries + 1), wait=wait_fixed(retry_delay))
+            @retry(
+                stop=stop_after_attempt(retries + 1), wait=wait_exponential(multiplier=retry_delay)
+            )
             async def wrapped_fn(*a, **kw):
                 return await fn(*a, **kw)
 
