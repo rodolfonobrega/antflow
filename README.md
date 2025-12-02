@@ -169,7 +169,7 @@ async def main():
     async with AsyncExecutor(max_workers=10) as executor:
         # Using map() for parallel processing with automatic retry
         results = []
-        # retries=3 means it will try up to 4 times total (1 initial + 3 retries)
+        # retries=3 means it will try up to 4 times total with exponential backoff
         async for result in executor.map(process_item, range(100), retries=3):
             results.append(result)
         print(f"Processed {len(results)} items")
