@@ -45,6 +45,7 @@ class Stage:
     task_concurrency_limits: Dict[str, int] = field(default_factory=dict)
     on_success: Optional[Callable[[Any, Any, Dict[str, Any]], Any]] = None
     on_failure: Optional[Callable[[Any, Exception, Dict[str, Any]], Any]] = None
+    skip_if: Optional[Callable[[Any], bool]] = None
 
     def validate(self) -> None:
         """
@@ -629,20 +630,39 @@ class Pipeline:
             try:
                 logger.debug(f"[{name}] START stage={stage.name} id={item_id} attempt={attempt} prio={priority}")
 
-                await self._emit_status(item_id, stage.name, "in_progress", worker=name)
-
-                if stage.retry == "per_task":
-                    result_value = await self._run_per_task(stage, payload["value"], name, item_id)
+                # SKIP Logic
+                should_skip = False
+                if stage.skip_if:
+                    try:
+                        should_skip = stage.skip_if(payload["value"])
+                    except Exception as e:
+                        logger.warning(f"[{name}] Error in skip_if predicate for id={item_id}: {e}")
+                        should_skip = False
+                
+                if should_skip:
+                    logger.info(f"[{name}] SKIP stage={stage.name} id={item_id}")
+                    await self._emit_status(item_id, stage.name, "skipped", worker=name)
+                    # Pass-through value
+                    result_value = payload["value"]
                 else:
-                    result_value = await self._run_per_stage(
-                        stage, payload["value"], name, item_id, payload, attempt, input_q, priority
-                    )
-                    if result_value is None:
-                        continue
+                    await self._emit_status(item_id, stage.name, "in_progress", worker=name)
+
+                    if stage.retry == "per_task":
+                        result_value = await self._run_per_task(stage, payload["value"], name, item_id)
+                    else:
+                        result_value = await self._run_per_stage(
+                            stage, payload["value"], name, item_id, payload, attempt, input_q, priority
+                        )
+                        if result_value is None:
+                            continue
 
                 payload["value"] = result_value
-
-                await self._emit_status(item_id, stage.name, "completed", worker=name)
+                
+                # Emit completed if not skipped? Or is skipped enough?
+                # "skipped" is the final status for this stage. 
+                # But to trigger "queued" for next stage, we just proceed.
+                if not should_skip:
+                    await self._emit_status(item_id, stage.name, "completed", worker=name)
 
                 if output_q is not None:
                     # Propagate priority, use new sequence number for stability in next queue
