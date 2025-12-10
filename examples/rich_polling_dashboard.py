@@ -65,24 +65,39 @@ def generate_dashboard(pipeline: Pipeline, tracker: StatusTracker, total_items: 
         Layout(name="workers", ratio=2)
     )
     
-    # Stats Table
-    stats_table = Table(title="Pipeline Statistics", expand=True)
-    stats_table.add_column("Metric", style="cyan")
-    stats_table.add_column("Value", style="magenta")
+    # Stage Breakdown Table
+    stage_table = Table(title="Stage Metrics", expand=True)
+    stage_table.add_column("Stage", style="cyan")
+    stage_table.add_column("Pending", style="blue")
+    stage_table.add_column("In Progress", style="yellow")
+    stage_table.add_column("Done", style="green")
+    stage_table.add_column("Failed", style="red")
+
+    for stage_name, stage_stat in stats.stage_stats.items():
+        stage_table.add_row(
+            stage_name,
+            str(stage_stat.pending_items),
+            str(stage_stat.in_progress_items),
+            str(stage_stat.completed_items),
+            str(stage_stat.failed_items)
+        )
     
-    stats_table.add_row("Total Items", str(total_items))
-    stats_table.add_row("Processed", str(stats.items_processed))
-    stats_table.add_row("Failed", str(stats.items_failed))
-    stats_table.add_row("In Flight", str(stats.items_in_flight))
+    # Overview Table
+    overview_table = Table(title="Overview", expand=True)
+    overview_table.add_column("Metric", style="white")
+    overview_table.add_column("Value", style="magenta")
+    overview_table.add_row("Total Items", str(total_items))
+    overview_table.add_row("Processed", str(stats.items_processed))
+    overview_table.add_row("Failed", str(stats.items_failed))
     
-    # Calculate progress
-    # items_processed counts completions per stage, so we normalize by number of stages
-    total_ops = total_items * len(pipeline.stages)
-    completed_ops = stats.items_processed + stats.items_failed
-    progress_pct = (completed_ops / total_ops) * 100 if total_ops > 0 else 0
-    stats_table.add_row("Progress", f"{progress_pct:.1f}%")
+    # Combine tables in Stats panel
+    stats_layout = Layout()
+    stats_layout.split_row(
+        Layout(Panel(stage_table, title="Stage Breakdown"), ratio=2),
+        Layout(Panel(overview_table, title="Summary"), ratio=1)
+    )
     
-    layout["stats"].update(Panel(stats_table, title="Overview"))
+    layout["stats"].update(stats_layout)
     
     # Worker Monitor Table
     worker_table = Table(title="Worker Monitor", expand=True)
