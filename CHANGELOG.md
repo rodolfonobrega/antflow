@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+*   **Feature: Stage Metrics**
+    *   `Pipeline.get_stats()` now returns granular `stage_stats`, including pending, in-progress, completed, and failed counts per stage.
+    *   Updated `examples/rich_polling_dashboard.py` to visualize these stage-level metrics.
 *   **Feature: Interactive Pipeline Lifecycle**
     *   Added `Pipeline.start()`: Initializes and starts workers without blocking.
     *   Added `Pipeline.join()`: Waits for all items to be processed and shuts down.

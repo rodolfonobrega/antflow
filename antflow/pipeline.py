@@ -17,6 +17,7 @@ from .types import (
     DashboardSnapshot,
     PipelineResult,
     PipelineStats,
+    StageStats,
     TaskEvent,
     TaskFunc,
     WorkerMetrics,
@@ -141,15 +142,50 @@ class Pipeline:
         Returns:
             [PipelineStats][antflow.types.PipelineStats] with current metrics
         """
-        queue_sizes = {stage.name: self._queues[i].qsize() for i, stage in enumerate(self.stages)}
+        queue_sizes = {}
+        stage_stats = {}
+        
+        # Calculate aggregations
+        worker_states = self.get_worker_states().values()
+        worker_metrics_all = self.get_worker_metrics().values()
 
-        items_in_flight = sum(queue_sizes.values())
+        for i, stage in enumerate(self.stages):
+            # Pending
+            pending = self._queues[i].qsize()
+            queue_sizes[stage.name] = pending
+            
+            # In Progress (Busy Workers)
+            in_progress = sum(
+                1 for s in worker_states 
+                if s.stage == stage.name and s.status == "busy"
+            )
+            
+            # Completed/Failed (by workers in this stage)
+            completed = sum(
+                m.items_processed for m in worker_metrics_all 
+                if m.stage == stage.name
+            )
+            failed = sum(
+                m.items_failed for m in worker_metrics_all 
+                if m.stage == stage.name
+            )
+            
+            stage_stats[stage.name] = StageStats(
+                stage_name=stage.name,
+                pending_items=pending,
+                in_progress_items=in_progress,
+                completed_items=completed,
+                failed_items=failed
+            )
+
+        items_in_flight = sum(s.pending_items + s.in_progress_items for s in stage_stats.values())
 
         return PipelineStats(
             items_processed=self._items_processed,
             items_failed=self._items_failed,
             items_in_flight=items_in_flight,
             queue_sizes=queue_sizes,
+            stage_stats=stage_stats,
         )
 
     def get_worker_names(self) -> Dict[str, List[str]]:

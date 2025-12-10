@@ -35,20 +35,41 @@ class PipelineResult:
 
 
 @dataclass
+class StageStats:
+    """
+    Statistics for a single stage.
+
+    Attributes:
+        stage_name: Name of the stage
+        pending_items: Number of items in the queue
+        in_progress_items: Number of items currently being processed (busy workers)
+        completed_items: Total items successfully processed by this stage
+        failed_items: Total items failed in this stage
+    """
+    stage_name: str
+    pending_items: int
+    in_progress_items: int
+    completed_items: int
+    failed_items: int
+
+
+@dataclass
 class PipelineStats:
     """
     Aggregate statistics for the pipeline.
 
     Attributes:
-        items_processed: Total number of items successfully processed
+        items_processed: Total number of items successfully processed (final output)
         items_failed: Total number of items that failed
-        items_in_flight: Number of items currently being processed
+        items_in_flight: Number of items currently being processed anywhere
         queue_sizes: Dictionary mapping stage names to current queue sizes
+        stage_stats: Detailed statistics per stage
     """
     items_processed: int
     items_failed: int
     items_in_flight: int
     queue_sizes: Dict[str, int]
+    stage_stats: Dict[str, StageStats] = field(default_factory=dict)
 
 
 @dataclass
