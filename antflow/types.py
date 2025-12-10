@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Any, Awaitable, Callable, Dict, List, Literal, Optional
 
 TaskFunc = Callable[[Any], Awaitable[Any]]
-StatusType = Literal["queued", "in_progress", "completed", "failed", "retrying"]
+StatusType = Literal["queued", "in_progress", "completed", "failed", "retrying", "skipped"]
 WorkerStatus = Literal["idle", "busy"]
 TaskEventType = Literal["start", "complete", "retry", "fail"]
 

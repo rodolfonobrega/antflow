@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+*   **Feature: Conditional Stage Skipping**
+    *   `Stage` now accepts a `skip_if` callable (e.g., `lambda x: x.is_done`).
+    *   Items meeting the condition skip processing and are passed directly to the next stage with a `skipped` status.
+    *   Ideal for "resume from start" strategies.
 *   **Feature: Stage Metrics**
     *   `Pipeline.get_stats()` now returns granular `stage_stats`, including pending, in-progress, completed, and failed counts per stage.
     *   Updated `examples/rich_polling_dashboard.py` to visualize these stage-level metrics.
