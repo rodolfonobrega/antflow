@@ -88,13 +88,35 @@ stage = Stage(
 
 You might think: *"Why not just use a GeneratorStage (2 workers) feeding into a PollingStage (50 workers)?"*
 
-**Scenario A: Two Stages (The "Firehose" Risk)**
+**Scenario A: Two Stages (The "Firehose" Risk) ❌**
+
+```python
+# ❌ DON'T DO THIS for this scenario
+stage_gen = Stage("Generator", workers=2, tasks=[generate, upload])
+stage_poll = Stage("Polling", workers=50, tasks=[poll])
+
+# Problem: stage_gen is faster than stage_poll.
+# It will pump 1000 jobs into stage_poll's queue.
+# Result: 950 jobs running on OpenAI, unmonitored in the queue.
+```
+
 *   **Structure**: `GeneratorStage (2 workers)` -> `PollingStage (50 workers)`.
 *   **Behavior**: The `GeneratorStage` continuously produces jobs (2 at a time) and pushes them to `PollingStage`.
 *   **The Problem**: If `PollingStage` is full (50 jobs running), the `GeneratorStage` *keeps going*. It might start 750 jobs on OpenAI.
 *   **Result**: You have 750 jobs running on OpenAI, but only 50 workers "watching" them. 700 jobs are running unmonitored. If they fail or finish, you won't know until a worker frees up.
 
-**Scenario B: Single Stage + Limits (The "Bounded" Solution)**
+**Scenario B: Single Stage + Limits (The "Bounded" Solution) ✅**
+
+```python
+# ✅ DO THIS
+stage = Stage(
+    "Combined", 
+    workers=50, 
+    tasks=[generate, upload, poll],
+    task_concurrency_limits={"upload": 2}
+)
+```
+
 *   **Structure**: One Stage (50 workers) with `limit={upload: 2}`.
 *   **Behavior**: When all 50 workers are busy polling, *no new upload tasks can start*.
 *   **The Result**:
