@@ -1,0 +1,3145 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="AntFlow - Async execution library with concurrent.futures-style API and advanced pipelines">
+      
+      
+      
+        <link rel="canonical" href="https://rodolfonobrega.github.io/antflow/user-guide/pipeline/">
+      
+      
+        <link rel="prev" href="../concurrency/">
+      
+      
+        <link rel="next" href="../dashboard/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.0">
+    
+    
+      
+        <title>Pipeline - AntFlow Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.618322db.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#pipeline-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="AntFlow Documentation" class="md-header__button md-logo" aria-label="AntFlow Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            AntFlow Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Pipeline
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rodolfonobrega/antflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rodolfonobrega/antflow
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/installation/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../executor/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../api/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../examples/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../contributing/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Contributing
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="AntFlow Documentation" class="md-nav__button md-logo" aria-label="AntFlow Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    AntFlow Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rodolfonobrega/antflow" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    rodolfonobrega/antflow
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../executor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AsyncExecutor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concurrency/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concurrency Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Concepts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage Configuration Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage Configuration Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-case-openai-batch-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Case: OpenAI Batch Processing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-comparison-why-not-2-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Comparison: Why not 2 Stages?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-backpressure-smart-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Backpressure (Smart Limits)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-simple-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a Simple Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interactive-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-tasks-per-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple Tasks per Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retry-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retry Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Retry Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-task-retry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Task Retry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-stage-retry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Stage Retry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-which" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Which
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status Tracking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Status Tracking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-status-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Status Tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-event-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Event Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-level-event-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task-Level Event Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#status-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#order-preservation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Order Preservation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitoring-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitoring Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Monitoring Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strategy-1-event-driven-callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy 1: Event-Driven (Callbacks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strategy-2-polling-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy 2: Polling (Loop)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feeding-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feeding Data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Feeding Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#synchronous-iterable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synchronous Iterable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#async-iterable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async Iterable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dict-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dict Input
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context Manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tracking-failures-with-statustracker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tracking Failures with StatusTracker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extracting-error-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extracting Error Information
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-level-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker-Level Tracking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#priority-queues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority Queues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-etl-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete ETL Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#worker-pool-sizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker Pool Sizing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retry-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retry Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-internals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Internals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Internals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-queue-structure-_queues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal Queue Structure (_queues)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#payload-structure-_prepare_payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payload Structure (_prepare_payload)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dashboard/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dashboard
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../worker-tracking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Worker Tracking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../error-handling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Error Handling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/executor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Executor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/tracker/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    StatusTracker
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/exceptions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exceptions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Index
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/basic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-concepts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Concepts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Concepts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#stage-configuration-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stage Configuration Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Stage Configuration Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#use-case-openai-batch-processing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use Case: OpenAI Batch Processing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-comparison-why-not-2-stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture Comparison: Why not 2 Stages?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#automatic-backpressure-smart-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Automatic Backpressure (Smart Limits)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Usage
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Basic Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-simple-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a Simple Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interactive-execution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive Execution
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multiple-tasks-per-stage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multiple Tasks per Stage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retry-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retry Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Retry Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#per-task-retry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Task Retry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-stage-retry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-Stage Retry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-to-use-which" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When to Use Which
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status Tracking
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Status Tracking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-status-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Status Tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-time-event-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-Time Event Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#task-level-event-monitoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Task-Level Event Monitoring
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#status-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status Types
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#order-preservation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Order Preservation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitoring-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitoring Strategies
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Monitoring Strategies">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#strategy-1-event-driven-callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy 1: Event-Driven (Callbacks)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#strategy-2-polling-loop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Strategy 2: Polling (Loop)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#feeding-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Feeding Data
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Feeding Data">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#synchronous-iterable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Synchronous Iterable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#async-iterable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Async Iterable
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dict-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dict Input
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#context-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context Manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Error Handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tracking-failures-with-statustracker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tracking Failures with StatusTracker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extracting-error-information" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extracting Error Information
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worker-level-tracking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker-Level Tracking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#priority-queues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Priority Queues
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-etl-example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Complete ETL Example
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#worker-pool-sizing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worker Pool Sizing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#retry-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retry Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#callbacks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Callbacks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#advanced-internals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Advanced Internals
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Advanced Internals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#internal-queue-structure-_queues" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal Queue Structure (_queues)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#payload-structure-_prepare_payload" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payload Structure (_prepare_payload)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="pipeline-guide">Pipeline Guide<a class="headerlink" href="#pipeline-guide" title="Permanent link">&para;</a></h1>
+<p>The <code>Pipeline</code> class enables multi-stage async processing with configurable worker pools, retry strategies, and real-time status tracking.</p>
+<h2 id="core-concepts">Core Concepts<a class="headerlink" href="#core-concepts" title="Permanent link">&para;</a></h2>
+<h3 id="stages">Stages<a class="headerlink" href="#stages" title="Permanent link">&para;</a></h3>
+<p>A <strong>Stage</strong> represents a processing step with:
+- One or more sequential tasks
+- A pool of workers executing in parallel
+- A retry strategy (per-task or per-stage)
+- Automatic status tracking when StatusTracker is configured</p>
+<h3 id="pipeline">Pipeline<a class="headerlink" href="#pipeline" title="Permanent link">&para;</a></h3>
+<p>A <strong>Pipeline</strong> connects multiple stages together:
+- Items flow from one stage to the next
+- Each stage has its own queue and workers
+- Order can be preserved across stages
+- Results are collected from the final stage</p>
+<h2 id="stage-configuration-reference">Stage Configuration Reference<a class="headerlink" href="#stage-configuration-reference" title="Permanent link">&para;</a></h2>
+<p>The <code>Stage</code> class is the building block of your pipeline. Here are all the available configuration options:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Type</th>
+<th style="text-align: left;">Default</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong><code>name</code></strong></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><em>Required</em></td>
+<td style="text-align: left;">Unique identifier for the stage. Used in logs and status events.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>workers</code></strong></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><em>Required</em></td>
+<td style="text-align: left;">Number of concurrent workers for this stage.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>tasks</code></strong></td>
+<td style="text-align: left;"><code>List[TaskFunc]</code></td>
+<td style="text-align: left;"><em>Required</em></td>
+<td style="text-align: left;">List of async functions to execute sequentially for each item.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>retry</code></strong></td>
+<td style="text-align: left;"><code>str</code></td>
+<td style="text-align: left;"><code>"per_task"</code></td>
+<td style="text-align: left;">Retry strategy: <code>"per_task"</code> (retry individual function) or <code>"per_stage"</code> (restart stage from first task).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>task_attempts</code></strong></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><code>3</code></td>
+<td style="text-align: left;">Max attempts per task (used in <code>"per_task"</code> mode).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>stage_attempts</code></strong></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><code>3</code></td>
+<td style="text-align: left;">Max attempts per stage (used in <code>"per_stage"</code> mode).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>task_wait_seconds</code></strong></td>
+<td style="text-align: left;"><code>float</code></td>
+<td style="text-align: left;"><code>1.0</code></td>
+<td style="text-align: left;">Time to wait between retries.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>task_concurrency_limits</code></strong></td>
+<td style="text-align: left;"><code>Dict[str, int]</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Max concurrent executions for specific task functions (see example below).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>unpack_args</code></strong></td>
+<td style="text-align: left;"><code>bool</code></td>
+<td style="text-align: left;"><code>False</code></td>
+<td style="text-align: left;">If <code>True</code>, unpacks the input item (<code>*args</code>/<code>**kwargs</code>) when calling the first task.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>on_success</code></strong></td>
+<td style="text-align: left;"><code>Callable</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Callback or <code>async</code> function to run on successful item completion.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>on_failure</code></strong></td>
+<td style="text-align: left;"><code>Callable</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Callback or <code>async</code> function to run on item failure (after all retries).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>skip_if</code></strong></td>
+<td style="text-align: left;"><code>Callable</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Predicate function <code>(item) -&gt; bool</code>. If <code>True</code>, the item skips this stage entirely.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong><code>queue_capacity</code></strong></td>
+<td style="text-align: left;"><code>int</code></td>
+<td style="text-align: left;"><code>None</code></td>
+<td style="text-align: left;">Optional. Manually set input queue size. If <code>None</code> (default), uses smart limit (<code>workers * 10</code>). Set to <code>0</code> for infinite.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="use-case-openai-batch-processing">Use Case: OpenAI Batch Processing<a class="headerlink" href="#use-case-openai-batch-processing" title="Permanent link">&para;</a></h3>
+<p><code>task_concurrency_limits</code> is powerful when you have a large worker pool for general processing but need to throttle specific operations (like API uploads) due to strict rate limits.</p>
+<p><strong>Scenario:</strong>
+You have 1000 jobs to process using OpenAI's Batch API.
+The process is: <code>Generate -&gt; Upload -&gt; Start Job -&gt; Poll -&gt; Download</code>.</p>
+<p><strong>The Constraints:</strong>
+1.  <strong>Strict Upload Limit:</strong> You can only upload <strong>2 files</strong> at the same time (rate limit).
+2.  <strong>Batch Queue Capacity:</strong> You can have <strong>max 50 active jobs</strong> running in the Batch API at once.</p>
+<p><strong>The Problem:</strong>
+*   If you set <code>workers=2</code> (to satisfy the upload limit), you will only ever have 2 jobs running in the Batch API. You are wasting 48 slots of capacity!
+*   If you set <code>workers=50</code> (to fill the Batch API capacity), all 50 workers will try to upload files simultaneously at the start, causing you to hit the upload rate limit and crash.</p>
+<p><strong>Solution:</strong>
+Use <code>workers=50</code> to maximize your Batch API usage, but use <code>task_concurrency_limits</code> to throttle <em>only</em> the upload task to 2.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">generate_jsonl</span><span class="p">(</span><span class="n">item</span><span class="p">):</span> <span class="o">...</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">upload_file</span><span class="p">(</span><span class="n">item</span><span class="p">):</span> <span class="o">...</span> <span class="c1"># Strict limit!</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">start_job</span><span class="p">(</span><span class="n">item</span><span class="p">):</span> <span class="o">...</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">poll_status</span><span class="p">(</span><span class="n">item</span><span class="p">):</span> <span class="o">...</span> <span class="c1"># Takes a long time</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">download_results</span><span class="p">(</span><span class="n">item</span><span class="p">):</span> <span class="o">...</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;OpenAI_Batch_Job&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>  <span class="c1"># 50 workers allow us to poll 50 jobs simultaneously!</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>        <span class="n">generate_jsonl</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>        <span class="n">upload_file</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>        <span class="n">start_job</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>        <span class="n">poll_status</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>        <span class="n">download_results</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="p">],</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_task&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="c1"># The magic happens here:</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="n">task_concurrency_limits</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>        <span class="s2">&quot;upload_file&quot;</span><span class="p">:</span> <span class="mi">2</span>  <span class="c1"># Only 2 uploads happen at once, even with 50 active workers</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="p">}</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="p">)</span>
+</code></pre></div>
+<h3 id="architecture-comparison-why-not-2-stages">Architecture Comparison: Why not 2 Stages?<a class="headerlink" href="#architecture-comparison-why-not-2-stages" title="Permanent link">&para;</a></h3>
+<p>You might think: <em>"Why not just use a GeneratorStage (2 workers) feeding into a PollingStage (50 workers)?"</em></p>
+<p><strong>Scenario A: Two Stages (The "Firehose" Risk) ❌</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># ❌ DON&#39;T DO THIS for this scenario</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">stage_gen</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span><span class="s2">&quot;Generator&quot;</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">generate</span><span class="p">,</span> <span class="n">upload</span><span class="p">])</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">stage_poll</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span><span class="s2">&quot;Polling&quot;</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">poll</span><span class="p">])</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Problem: stage_gen is faster than stage_poll.</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="c1"># It will pump 1000 jobs into stage_poll&#39;s queue.</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="c1"># Result: 950 jobs running on OpenAI, unmonitored in the queue.</span>
+</code></pre></div>
+<ul>
+<li><strong>Structure</strong>: <code>GeneratorStage (2 workers)</code> -&gt; <code>PollingStage (50 workers)</code>.</li>
+<li><strong>Behavior</strong>: The <code>GeneratorStage</code> continuously produces jobs (2 at a time) and pushes them to <code>PollingStage</code>.</li>
+<li><strong>The Problem</strong>: If <code>PollingStage</code> is full (50 jobs running), the <code>GeneratorStage</code> <em>keeps going</em>. It might start 750 jobs on OpenAI.</li>
+<li><strong>Result</strong>: You have 750 jobs running on OpenAI, but only 50 workers "watching" them. 700 jobs are running unmonitored. If they fail or finish, you won't know until a worker frees up.</li>
+</ul>
+<p><strong>Scenario B: Single Stage + Limits (The "Bounded" Solution) ✅</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># ✅ DO THIS</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="s2">&quot;Combined&quot;</span><span class="p">,</span> 
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> 
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">generate</span><span class="p">,</span> <span class="n">upload</span><span class="p">,</span> <span class="n">poll</span><span class="p">],</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">task_concurrency_limits</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;upload&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><strong>Structure</strong>: One Stage (50 workers) with <code>limit={upload: 2}</code>.</li>
+<li><strong>Behavior</strong>: When all 50 workers are busy polling, <em>no new upload tasks can start</em>.</li>
+<li><strong>The Result</strong>:<ul>
+<li>Max <strong>50 jobs</strong> are running on OpenAI at any time.</li>
+<li>Job #51 stays in the input queue. It is <strong>not generated, not uploaded, and not started</strong>.</li>
+<li>This provides true <strong>Backpressure</strong>. You usually want this to avoid overwhelming the external system or your own monitoring capacity.</li>
+</ul>
+</li>
+</ul>
+<h3 id="automatic-backpressure-smart-limits">Automatic Backpressure (Smart Limits)<a class="headerlink" href="#automatic-backpressure-smart-limits" title="Permanent link">&para;</a></h3>
+<p>As of version 0.3.3, AntFlow implements <strong>Smart Internal Limits</strong> for all stage queues.</p>
+<ul>
+<li><strong>How it works:</strong> Each stage has a limited input queue size. The default limit is <code>max(1, workers * 10)</code>. </li>
+<li><strong>Example:</strong> A stage with 5 workers allows ~50 items to be queued waiting for processing.</li>
+<li><strong>Effect:</strong> If a stage is slow, its input queue fills up. Once full, the <strong>previous stage</strong> (or the <code>feed()</code> call) is blocked from adding more items until space clears up.</li>
+<li><strong>Benefit:</strong> This automatically propagates backpressure upstream, preventing memory exhaustion and regulating flow without manual configuration.</li>
+</ul>
+<p><strong>Customizing Limits:</strong></p>
+<p>You can override this behavior using the <code>queue_capacity</code> parameter:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;BufferStage&quot;</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">queue_capacity</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># Large buffer</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">process</span><span class="p">]</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="p">)</span>
+</code></pre></div>
+<h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
+<h3 id="creating-a-simple-pipeline">Creating a Simple Pipeline<a class="headerlink" href="#creating-a-simple-pipeline" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">Stage</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;data_</span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1"># Define stages</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="n">fetch_stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Fetch&quot;</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">fetch</span><span class="p">])</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="n">process_stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Process&quot;</span><span class="p">,</span> <span class="n">workers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">process</span><span class="p">])</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="c1"># Create pipeline</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">fetch_stage</span><span class="p">,</span> <span class="n">process_stage</span><span class="p">])</span>
+<a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a>
+<a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1"># Run pipeline</span>
+<a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+</code></pre></div>
+<h3 id="interactive-execution">Interactive Execution<a class="headerlink" href="#interactive-execution" title="Permanent link">&para;</a></h3>
+<p>For more control, you can split execution into <code>start</code>, <code>feed</code>, and <code>join</code> steps. This allows you to inject items dynamically while the pipeline is running:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Start background workers</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># Feed initial batch to first stage (default)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">batch_1</span><span class="p">)</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># Do other work...</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># Inject items directly into a specific stage (e.g., resuming from a checkpoint)</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1"># This item will skip previous stages and start processing at &#39;ProcessStage&#39;</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">recovered_items</span><span class="p">,</span> <span class="n">target_stage</span><span class="o">=</span><span class="s2">&quot;ProcessStage&quot;</span><span class="p">)</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="c1"># Wait for completion</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1"># Access results</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a><span class="nb">print</span><span class="p">(</span><span class="n">pipeline</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="multiple-tasks-per-stage">Multiple Tasks per Stage<a class="headerlink" href="#multiple-tasks-per-stage" title="Permanent link">&para;</a></h3>
+<p>A stage can have multiple tasks that execute sequentially for each item:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">Stage</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="k">if</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Negative value&quot;</span><span class="p">)</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="k">return</span> <span class="n">x</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">2</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">format_output</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Result: </span><span class="si">{</span><span class="n">x</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ProcessStage&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">validate</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">format_output</span><span class="p">]</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="p">)</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage</span><span class="p">])</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>
+</code></pre></div>
+<h2 id="retry-strategies">Retry Strategies<a class="headerlink" href="#retry-strategies" title="Permanent link">&para;</a></h2>
+<h3 id="per-task-retry">Per-Task Retry<a class="headerlink" href="#per-task-retry" title="Permanent link">&para;</a></h3>
+<p>Each task retries independently using tenacity:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stage</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;FetchStage&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">fetch_from_api</span><span class="p">],</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_task&quot;</span><span class="p">,</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>    <span class="n">task_attempts</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>    <span class="n">task_wait_seconds</span><span class="o">=</span><span class="mf">1.0</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><strong><code>task_attempts</code></strong>: Maximum retry attempts per task</li>
+<li><strong><code>task_wait_seconds</code></strong>: Wait time between retries</li>
+</ul>
+<p>If a task fails after all retries, the stage fails for that item.</p>
+<h3 id="per-stage-retry">Per-Stage Retry<a class="headerlink" href="#per-stage-retry" title="Permanent link">&para;</a></h3>
+<p>The entire stage (all tasks) retries on any failure:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Stage</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;TransactionStage&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">begin_transaction</span><span class="p">,</span> <span class="n">update_db</span><span class="p">,</span> <span class="n">commit</span><span class="p">],</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_stage&quot;</span><span class="p">,</span>
+<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">stage_attempts</span><span class="o">=</span><span class="mi">3</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="p">)</span>
+</code></pre></div>
+<ul>
+<li><strong><code>stage_attempts</code></strong>: Maximum retry attempts for the entire stage</li>
+</ul>
+<p>If any task fails, the item is re-queued at the beginning of the stage.</p>
+<h3 id="when-to-use-which">When to Use Which<a class="headerlink" href="#when-to-use-which" title="Permanent link">&para;</a></h3>
+<p><strong>Per-Task Retry</strong>:
+- Independent tasks that can fail separately
+- Fine-grained retry control
+- Tasks with different failure modes</p>
+<p><strong>Per-Stage Retry</strong>:
+- Transactional operations
+- Tasks with dependencies
+- All-or-nothing processing</p>
+<h2 id="status-tracking">Status Tracking<a class="headerlink" href="#status-tracking" title="Permanent link">&para;</a></h2>
+<p>Track items in real-time as they flow through the pipeline with <code>StatusTracker</code>.</p>
+<h3 id="basic-status-tracking">Basic Status Tracking<a class="headerlink" href="#basic-status-tracking" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">Stage</span><span class="p">,</span> <span class="n">StatusTracker</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="n">tracker</span> <span class="o">=</span> <span class="n">StatusTracker</span><span class="p">()</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ProcessStage&quot;</span><span class="p">,</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">my_task</span><span class="p">]</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="p">)</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage</span><span class="p">],</span> <span class="n">status_tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="c1"># Query statistics</span>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="n">stats</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">get_stats</span><span class="p">()</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Completed: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;completed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;failed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="real-time-event-monitoring">Real-Time Event Monitoring<a class="headerlink" href="#real-time-event-monitoring" title="Permanent link">&para;</a></h3>
+<p>Get notified when items change status:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">StatusTracker</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_status_change</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">: Item </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> @ </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">stage</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;failed&quot;</span><span class="p">:</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Error: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;in_progress&quot;</span><span class="p">:</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Worker: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">worker</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="n">tracker</span> <span class="o">=</span> <span class="n">StatusTracker</span><span class="p">(</span><span class="n">on_status_change</span><span class="o">=</span><span class="n">on_status_change</span><span class="p">)</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage</span><span class="p">],</span> <span class="n">status_tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="task-level-event-monitoring">Task-Level Event Monitoring<a class="headerlink" href="#task-level-event-monitoring" title="Permanent link">&para;</a></h3>
+<p>For granular tracking, monitor individual tasks within stages:</p>
+<p><div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatusTracker</span><span class="p">,</span> <span class="n">TaskEvent</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_task_retry</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">TaskEvent</span><span class="p">):</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;⚠️  Task </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">task_name</span><span class="si">}</span><span class="s2"> retry #</span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">attempt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;   Item: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2">, Error: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_task_fail</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">TaskEvent</span><span class="p">):</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Task </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">task_name</span><span class="si">}</span><span class="s2"> FAILED after </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">attempt</span><span class="si">}</span><span class="s2"> attempts&quot;</span><span class="p">)</span>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a>    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">task_name</span> <span class="o">==</span> <span class="s2">&quot;save_to_database&quot;</span><span class="p">:</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a>        <span class="k">await</span> <span class="n">send_critical_alert</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Database save failed for </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="n">tracker</span> <span class="o">=</span> <span class="n">StatusTracker</span><span class="p">(</span>
+<a id="__codelineno-11-14" name="__codelineno-11-14" href="#__codelineno-11-14"></a>    <span class="n">on_success</span><span class="o">=</span><span class="n">handle_success</span><span class="p">,</span>
+<a id="__codelineno-11-15" name="__codelineno-11-15" href="#__codelineno-11-15"></a>    <span class="n">on_failure</span><span class="o">=</span><span class="n">handle_failure</span>
+<a id="__codelineno-11-16" name="__codelineno-11-16" href="#__codelineno-11-16"></a><span class="p">)</span>
+<a id="__codelineno-11-17" name="__codelineno-11-17" href="#__codelineno-11-17"></a>
+<a id="__codelineno-11-18" name="__codelineno-11-18" href="#__codelineno-11-18"></a><span class="c1">### Task Concurrency Limits</span>
+<a id="__codelineno-11-19" name="__codelineno-11-19" href="#__codelineno-11-19"></a>
+<a id="__codelineno-11-20" name="__codelineno-11-20" href="#__codelineno-11-20"></a><span class="n">You</span> <span class="n">can</span> <span class="n">limit</span> <span class="n">the</span> <span class="n">concurrency</span> <span class="n">of</span> <span class="n">specific</span> <span class="n">tasks</span> <span class="n">within</span> <span class="n">a</span> <span class="n">stage</span> <span class="n">using</span> <span class="err">`</span><span class="n">task_concurrency_limits</span><span class="err">`</span><span class="o">.</span> <span class="n">This</span> <span class="ow">is</span> <span class="n">useful</span> <span class="n">when</span> <span class="n">you</span> <span class="n">have</span> <span class="n">a</span> <span class="n">high</span> <span class="n">number</span> <span class="n">of</span> <span class="n">workers</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span> <span class="n">but</span> <span class="n">one</span> <span class="n">specific</span> <span class="n">task</span> <span class="p">(</span><span class="n">like</span> <span class="n">an</span> <span class="n">API</span> <span class="n">call</span><span class="p">)</span> <span class="n">has</span> <span class="n">a</span> <span class="n">strict</span> <span class="n">rate</span> <span class="n">limit</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="p">,</span> <span class="mi">5</span> <span class="n">concurrent</span> <span class="n">requests</span><span class="p">)</span><span class="o">.</span>
+<a id="__codelineno-11-21" name="__codelineno-11-21" href="#__codelineno-11-21"></a>
+<a id="__codelineno-11-22" name="__codelineno-11-22" href="#__codelineno-11-22"></a><span class="n">See</span> <span class="n">the</span> <span class="p">[</span><span class="n">Concurrency</span> <span class="n">Control</span> <span class="n">Guide</span><span class="p">](</span><span class="n">concurrency</span><span class="o">.</span><span class="n">md</span><span class="p">)</span> <span class="k">for</span> <span class="n">more</span> <span class="n">details</span><span class="o">.</span>
+<a id="__codelineno-11-23" name="__codelineno-11-23" href="#__codelineno-11-23"></a>
+<a id="__codelineno-11-24" name="__codelineno-11-24" href="#__codelineno-11-24"></a><span class="err">```</span><span class="n">python</span>
+<a id="__codelineno-11-25" name="__codelineno-11-25" href="#__codelineno-11-25"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-11-26" name="__codelineno-11-26" href="#__codelineno-11-26"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ETL&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-27" name="__codelineno-11-27" href="#__codelineno-11-27"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">extract</span><span class="p">,</span> <span class="n">transform</span><span class="p">,</span> <span class="n">validate</span><span class="p">,</span> <span class="n">save</span><span class="p">],</span>
+<a id="__codelineno-11-28" name="__codelineno-11-28" href="#__codelineno-11-28"></a>    <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_task&quot;</span><span class="p">,</span>
+<a id="__codelineno-11-29" name="__codelineno-11-29" href="#__codelineno-11-29"></a>    <span class="n">task_attempts</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-11-30" name="__codelineno-11-30" href="#__codelineno-11-30"></a>    <span class="c1"># Limit specific tasks (e.g., API calls) to avoid rate limits</span>
+<a id="__codelineno-11-31" name="__codelineno-11-31" href="#__codelineno-11-31"></a>    <span class="n">task_concurrency_limits</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-11-32" name="__codelineno-11-32" href="#__codelineno-11-32"></a>        <span class="s2">&quot;extract&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>  <span class="c1"># Max 5 concurrent extract calls</span>
+<a id="__codelineno-11-33" name="__codelineno-11-33" href="#__codelineno-11-33"></a>        <span class="s2">&quot;save&quot;</span><span class="p">:</span> <span class="mi">20</span>     <span class="c1"># Max 20 concurrent save calls</span>
+<a id="__codelineno-11-34" name="__codelineno-11-34" href="#__codelineno-11-34"></a>    <span class="p">}</span>
+<a id="__codelineno-11-35" name="__codelineno-11-35" href="#__codelineno-11-35"></a><span class="p">)</span>
+<a id="__codelineno-11-36" name="__codelineno-11-36" href="#__codelineno-11-36"></a>
+<a id="__codelineno-11-37" name="__codelineno-11-37" href="#__codelineno-11-37"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage</span><span class="p">],</span> <span class="n">status_tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>**Task Events Available:**
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>- `on_task_start`: Called when a task begins execution
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>- `on_task_complete`: Called when a task completes successfully
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a>- `on_task_retry`: Called when a task is retrying after a failure
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a>- `on_task_fail`: Called when a task fails after all retry attempts
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>Each `TaskEvent` contains:
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>- `item_id`: Item being processed
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a>- `stage`: Stage name
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a>- `task_name`: Specific task function name
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a>- `worker`: Worker processing the task
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>- `event_type`: &quot;start&quot;, &quot;complete&quot;, &quot;retry&quot;, or &quot;fail&quot;
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a>- `attempt`: Current attempt number (1-indexed)
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a>- `timestamp`: When the event occurred
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a>- `error`: Exception if task failed (None otherwise)
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a>- `duration`: Task execution time in seconds (None for start events)
+<a id="__codelineno-12-18" name="__codelineno-12-18" href="#__codelineno-12-18"></a>
+<a id="__codelineno-12-19" name="__codelineno-12-19" href="#__codelineno-12-19"></a>### Query Item Status
+<a id="__codelineno-12-20" name="__codelineno-12-20" href="#__codelineno-12-20"></a>
+<a id="__codelineno-12-21" name="__codelineno-12-21" href="#__codelineno-12-21"></a>```python
+<a id="__codelineno-12-22" name="__codelineno-12-22" href="#__codelineno-12-22"></a># Get specific item status
+<a id="__codelineno-12-23" name="__codelineno-12-23" href="#__codelineno-12-23"></a>status = tracker.get_status(item_id=42)
+<a id="__codelineno-12-24" name="__codelineno-12-24" href="#__codelineno-12-24"></a>print(f&quot;Item 42: {status.status} @ {status.stage}&quot;)
+<a id="__codelineno-12-25" name="__codelineno-12-25" href="#__codelineno-12-25"></a>
+<a id="__codelineno-12-26" name="__codelineno-12-26" href="#__codelineno-12-26"></a># Get all failed items
+<a id="__codelineno-12-27" name="__codelineno-12-27" href="#__codelineno-12-27"></a>failed = tracker.get_by_status(&quot;failed&quot;)
+<a id="__codelineno-12-28" name="__codelineno-12-28" href="#__codelineno-12-28"></a>for event in failed:
+<a id="__codelineno-12-29" name="__codelineno-12-29" href="#__codelineno-12-29"></a>    print(f&quot;Item {event.item_id}: {event.metadata[&#39;error&#39;]}&quot;)
+<a id="__codelineno-12-30" name="__codelineno-12-30" href="#__codelineno-12-30"></a>
+<a id="__codelineno-12-31" name="__codelineno-12-31" href="#__codelineno-12-31"></a># Get item history
+<a id="__codelineno-12-32" name="__codelineno-12-32" href="#__codelineno-12-32"></a>history = tracker.get_history(item_id=42)
+<a id="__codelineno-12-33" name="__codelineno-12-33" href="#__codelineno-12-33"></a>for event in history:
+<a id="__codelineno-12-34" name="__codelineno-12-34" href="#__codelineno-12-34"></a>    print(f&quot;{event.timestamp}: {event.status}&quot;)
+</code></pre></div></p>
+<h3 id="status-types">Status Types<a class="headerlink" href="#status-types" title="Permanent link">&para;</a></h3>
+<p>Items progress through these states:
+- <code>queued</code> - Waiting in stage queue
+- <code>in_progress</code> - Being processed by worker
+- <code>completed</code> - Successfully finished stage
+- <code>failed</code> - Failed to complete stage</p>
+<p><strong>Important:</strong> Status tracking is at the <strong>stage level</strong>, not individual task level. If a stage has multiple tasks (e.g., <code>[validate, transform, enrich]</code>), you will know the stage failed but not which specific task caused the failure. The error message in <code>event.metadata['error']</code> will contain details about the failure. For task-level granularity, consider using separate stages (one task per stage) or adding logging within tasks.</p>
+<h2 id="order-preservation">Order Preservation<a class="headerlink" href="#order-preservation" title="Permanent link">&para;</a></h2>
+<p>Results are always returned in input order:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage1</span><span class="p">,</span> <span class="n">stage2</span><span class="p">])</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1"># Results maintain input order</span>
+</code></pre></div>
+<h2 id="monitoring-strategies">Monitoring Strategies<a class="headerlink" href="#monitoring-strategies" title="Permanent link">&para;</a></h2>
+<p>AntFlow supports two primary ways to monitor your pipeline: <strong>Event-Driven (Callbacks)</strong> and <strong>Polling</strong>.</p>
+<h3 id="strategy-1-event-driven-callbacks">Strategy 1: Event-Driven (Callbacks)<a class="headerlink" href="#strategy-1-event-driven-callbacks" title="Permanent link">&para;</a></h3>
+<p>Use <code>StatusTracker</code> callbacks to react immediately when events occur. This is best for:
+- Real-time dashboards (low latency)
+- Logging specific events (e.g., errors)
+- Triggering external actions (e.g., alerts)</p>
+<p><strong>Example:</strong> <code>examples/rich_callback_dashboard.py</code> demonstrates this approach.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_status_change</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>    <span class="c1"># React immediately to status changes</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> is now </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="n">tracker</span> <span class="o">=</span> <span class="n">StatusTracker</span><span class="p">(</span><span class="n">on_status_change</span><span class="o">=</span><span class="n">on_status_change</span><span class="p">)</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="n">status_tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="strategy-2-polling-loop">Strategy 2: Polling (Loop)<a class="headerlink" href="#strategy-2-polling-loop" title="Permanent link">&para;</a></h3>
+<p>Run a separate loop to periodically check <code>pipeline.get_stats()</code> or <code>pipeline.get_dashboard_snapshot()</code>. This is best for:
+- Periodic metrics aggregation
+- Decoupled monitoring (UI runs at its own FPS)
+- Reducing overhead (batching updates)</p>
+<p><strong>Example:</strong> <code>examples/rich_polling_dashboard.py</code> demonstrates this approach.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">monitor_loop</span><span class="p">(</span><span class="n">pipeline</span><span class="p">):</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>        <span class="c1"># Poll current state every second</span>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a>        <span class="n">stats</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">get_stats</span><span class="p">()</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed: </span><span class="si">{</span><span class="n">stats</span><span class="o">.</span><span class="n">items_processed</span><span class="si">}</span><span class="s2">, In-Flight: </span><span class="si">{</span><span class="n">stats</span><span class="o">.</span><span class="n">items_in_flight</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a><span class="k">async</span> <span class="k">with</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TaskGroup</span><span class="p">()</span> <span class="k">as</span> <span class="n">tg</span><span class="p">:</span>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a>    <span class="n">tg</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">monitor_loop</span><span class="p">(</span><span class="n">pipeline</span><span class="p">))</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a>    <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="feeding-data">Feeding Data<a class="headerlink" href="#feeding-data" title="Permanent link">&para;</a></h2>
+<h3 id="synchronous-iterable">Synchronous Iterable<a class="headerlink" href="#synchronous-iterable" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="n">items</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">))</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="async-iterable">Async Iterable<a class="headerlink" href="#async-iterable" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">data_generator</span><span class="p">():</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>        <span class="k">yield</span> <span class="n">i</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">feed_async</span><span class="p">(</span><span class="n">data_generator</span><span class="p">())</span>
+</code></pre></div>
+<h3 id="dict-input">Dict Input<a class="headerlink" href="#dict-input" title="Permanent link">&para;</a></h3>
+<p>Pass dict items with custom IDs:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="n">items</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;user_1&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">}},</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="s2">&quot;user_2&quot;</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Bob&quot;</span><span class="p">}},</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="p">]</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="context-manager">Context Manager<a class="headerlink" href="#context-manager" title="Permanent link">&para;</a></h2>
+<p>Use pipeline as a context manager for automatic cleanup:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="k">async</span> <span class="k">with</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage1</span><span class="p">,</span> <span class="n">stage2</span><span class="p">])</span> <span class="k">as</span> <span class="n">pipeline</span><span class="p">:</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a>    <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="c1"># Pipeline is automatically shut down</span>
+</code></pre></div>
+<h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
+<h3 id="tracking-failures-with-statustracker">Tracking Failures with StatusTracker<a class="headerlink" href="#tracking-failures-with-statustracker" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">Stage</span><span class="p">,</span> <span class="n">StatusTracker</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="n">tracker</span> <span class="o">=</span> <span class="n">StatusTracker</span><span class="p">()</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="n">stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;RiskyStage&quot;</span><span class="p">,</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>    <span class="n">workers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a>    <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">risky_task</span><span class="p">],</span>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>    <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_task&quot;</span><span class="p">,</span>
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>    <span class="n">task_attempts</span><span class="o">=</span><span class="mi">3</span>
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="p">)</span>
+<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>
+<a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage</span><span class="p">],</span> <span class="n">status_tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+<a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a>
+<a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a><span class="c1"># Get statistics</span>
+<a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a><span class="n">stats</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">get_stats</span><span class="p">()</span>
+<a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Succeeded: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;completed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-20-19" name="__codelineno-20-19" href="#__codelineno-20-19"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed: </span><span class="si">{</span><span class="n">stats</span><span class="p">[</span><span class="s1">&#39;failed&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-20-20" name="__codelineno-20-20" href="#__codelineno-20-20"></a>
+<a id="__codelineno-20-21" name="__codelineno-20-21" href="#__codelineno-20-21"></a><span class="c1"># Get failed items</span>
+<a id="__codelineno-20-22" name="__codelineno-20-22" href="#__codelineno-20-22"></a><span class="n">failed_items</span> <span class="o">=</span> <span class="n">tracker</span><span class="o">.</span><span class="n">get_by_status</span><span class="p">(</span><span class="s2">&quot;failed&quot;</span><span class="p">)</span>
+<a id="__codelineno-20-23" name="__codelineno-20-23" href="#__codelineno-20-23"></a><span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">failed_items</span><span class="p">:</span>
+<a id="__codelineno-20-24" name="__codelineno-20-24" href="#__codelineno-20-24"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="extracting-error-information">Extracting Error Information<a class="headerlink" href="#extracting-error-information" title="Permanent link">&para;</a></h3>
+<p>Errors are available in the event metadata:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatusTracker</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_status_change</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a>    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;failed&quot;</span><span class="p">:</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>        <span class="n">error</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> failed: </span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="n">tracker</span> <span class="o">=</span> <span class="n">StatusTracker</span><span class="p">(</span><span class="n">on_status_change</span><span class="o">=</span><span class="n">on_status_change</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="worker-level-tracking">Worker-Level Tracking<a class="headerlink" href="#worker-level-tracking" title="Permanent link">&para;</a></h2>
+<p>Each worker has a unique ID (0 to N-1). Track which worker processes which item:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">StatusTracker</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">on_status_change</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a>    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;in_progress&quot;</span><span class="p">:</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Worker </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">worker_id</span><span class="si">}</span><span class="s2">: processing </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a>    <span class="k">elif</span> <span class="n">event</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s2">&quot;completed&quot;</span><span class="p">:</span>
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Worker </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">worker_id</span><span class="si">}</span><span class="s2">: completed </span><span class="si">{</span><span class="n">event</span><span class="o">.</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a>
+<a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="n">tracker</span> <span class="o">=</span> <span class="n">StatusTracker</span><span class="p">(</span><span class="n">on_status_change</span><span class="o">=</span><span class="n">on_status_change</span><span class="p">)</span>
+<a id="__codelineno-22-10" name="__codelineno-22-10" href="#__codelineno-22-10"></a><span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">stage</span><span class="p">],</span> <span class="n">status_tracker</span><span class="o">=</span><span class="n">tracker</span><span class="p">)</span>
+<a id="__codelineno-22-11" name="__codelineno-22-11" href="#__codelineno-22-11"></a>
+<a id="__codelineno-22-12" name="__codelineno-22-12" href="#__codelineno-22-12"></a><span class="n">worker_names</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">get_worker_names</span><span class="p">()</span>
+</code></pre></div>
+<p>See the <a href="../worker-tracking/">Worker Tracking Guide</a> for detailed examples including:</p>
+<ul>
+<li>Custom item IDs for better tracking</li>
+<li>Worker utilization analysis</li>
+<li>Load balancing monitoring</li>
+<li>Error tracking by worker</li>
+</ul>
+<h2 id="priority-queues">Priority Queues<a class="headerlink" href="#priority-queues" title="Permanent link">&para;</a></h2>
+<p>AntFlow uses <strong>Priority Queues</strong> internally. You can assign a priority level to items when feeding them into the pipeline.
+Lower numbers indicate higher priority (processed first). The default priority is <code>100</code>.</p>
+<ul>
+<li>Items with the same priority are processed in FIFO order.</li>
+<li>Priority is preserved across stages (unless a custom <code>feed</code> injects with different priority).</li>
+<li>Retries (per-task or per-stage) currently preserve the original priority.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1"># Expedited items (Priority 10)</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">vip_items</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1"># Normal items (Priority 100)</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">regular_items</span><span class="p">)</span>
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a>
+<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="c1"># Background/Low priority (Priority 500)</span>
+<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">feed</span><span class="p">(</span><span class="n">maintenance_items</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="complete-etl-example">Complete ETL Example<a class="headerlink" href="#complete-etl-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">antflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">Stage</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="k">class</span><span class="w"> </span><span class="nc">ETLProcessor</span><span class="p">:</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_id</span><span class="p">):</span>
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a>        <span class="c1"># Fetch from API/database</span>
+<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a>        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;raw_</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+<a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>
+<a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a>        <span class="c1"># Validate data</span>
+<a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a>        <span class="k">if</span> <span class="s2">&quot;data&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+<a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a>            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid data&quot;</span><span class="p">)</span>
+<a id="__codelineno-24-14" name="__codelineno-24-14" href="#__codelineno-24-14"></a>        <span class="k">return</span> <span class="n">data</span>
+<a id="__codelineno-24-15" name="__codelineno-24-15" href="#__codelineno-24-15"></a>
+<a id="__codelineno-24-16" name="__codelineno-24-16" href="#__codelineno-24-16"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<a id="__codelineno-24-17" name="__codelineno-24-17" href="#__codelineno-24-17"></a>        <span class="c1"># Transform data</span>
+<a id="__codelineno-24-18" name="__codelineno-24-18" href="#__codelineno-24-18"></a>        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;processed&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+<a id="__codelineno-24-19" name="__codelineno-24-19" href="#__codelineno-24-19"></a>        <span class="k">return</span> <span class="n">data</span>
+<a id="__codelineno-24-20" name="__codelineno-24-20" href="#__codelineno-24-20"></a>
+<a id="__codelineno-24-21" name="__codelineno-24-21" href="#__codelineno-24-21"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">enrich</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<a id="__codelineno-24-22" name="__codelineno-24-22" href="#__codelineno-24-22"></a>        <span class="c1"># Enrich with additional data</span>
+<a id="__codelineno-24-23" name="__codelineno-24-23" href="#__codelineno-24-23"></a>        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="s2">&quot;2025-10-09&quot;</span><span class="p">}</span>
+<a id="__codelineno-24-24" name="__codelineno-24-24" href="#__codelineno-24-24"></a>        <span class="k">return</span> <span class="n">data</span>
+<a id="__codelineno-24-25" name="__codelineno-24-25" href="#__codelineno-24-25"></a>
+<a id="__codelineno-24-26" name="__codelineno-24-26" href="#__codelineno-24-26"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<a id="__codelineno-24-27" name="__codelineno-24-27" href="#__codelineno-24-27"></a>        <span class="c1"># Save to database</span>
+<a id="__codelineno-24-28" name="__codelineno-24-28" href="#__codelineno-24-28"></a>        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+<a id="__codelineno-24-29" name="__codelineno-24-29" href="#__codelineno-24-29"></a>        <span class="n">data</span><span class="p">[</span><span class="s2">&quot;saved&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<a id="__codelineno-24-30" name="__codelineno-24-30" href="#__codelineno-24-30"></a>        <span class="k">return</span> <span class="n">data</span>
+<a id="__codelineno-24-31" name="__codelineno-24-31" href="#__codelineno-24-31"></a>
+<a id="__codelineno-24-32" name="__codelineno-24-32" href="#__codelineno-24-32"></a><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+<a id="__codelineno-24-33" name="__codelineno-24-33" href="#__codelineno-24-33"></a>    <span class="n">processor</span> <span class="o">=</span> <span class="n">ETLProcessor</span><span class="p">()</span>
+<a id="__codelineno-24-34" name="__codelineno-24-34" href="#__codelineno-24-34"></a>
+<a id="__codelineno-24-35" name="__codelineno-24-35" href="#__codelineno-24-35"></a>    <span class="c1"># Extract stage with high concurrency</span>
+<a id="__codelineno-24-36" name="__codelineno-24-36" href="#__codelineno-24-36"></a>    <span class="n">extract_stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-24-37" name="__codelineno-24-37" href="#__codelineno-24-37"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Extract&quot;</span><span class="p">,</span>
+<a id="__codelineno-24-38" name="__codelineno-24-38" href="#__codelineno-24-38"></a>        <span class="n">workers</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-24-39" name="__codelineno-24-39" href="#__codelineno-24-39"></a>        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">processor</span><span class="o">.</span><span class="n">extract</span><span class="p">],</span>
+<a id="__codelineno-24-40" name="__codelineno-24-40" href="#__codelineno-24-40"></a>        <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_task&quot;</span><span class="p">,</span>
+<a id="__codelineno-24-41" name="__codelineno-24-41" href="#__codelineno-24-41"></a>        <span class="n">task_attempts</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-24-42" name="__codelineno-24-42" href="#__codelineno-24-42"></a>        <span class="n">task_wait_seconds</span><span class="o">=</span><span class="mf">2.0</span>
+<a id="__codelineno-24-43" name="__codelineno-24-43" href="#__codelineno-24-43"></a>    <span class="p">)</span>
+<a id="__codelineno-24-44" name="__codelineno-24-44" href="#__codelineno-24-44"></a>
+<a id="__codelineno-24-45" name="__codelineno-24-45" href="#__codelineno-24-45"></a>    <span class="c1"># Transform stage with validation</span>
+<a id="__codelineno-24-46" name="__codelineno-24-46" href="#__codelineno-24-46"></a>    <span class="n">transform_stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-24-47" name="__codelineno-24-47" href="#__codelineno-24-47"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Transform&quot;</span><span class="p">,</span>
+<a id="__codelineno-24-48" name="__codelineno-24-48" href="#__codelineno-24-48"></a>        <span class="n">workers</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-24-49" name="__codelineno-24-49" href="#__codelineno-24-49"></a>        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">processor</span><span class="o">.</span><span class="n">validate</span><span class="p">,</span> <span class="n">processor</span><span class="o">.</span><span class="n">transform</span><span class="p">,</span> <span class="n">processor</span><span class="o">.</span><span class="n">enrich</span><span class="p">],</span>
+<a id="__codelineno-24-50" name="__codelineno-24-50" href="#__codelineno-24-50"></a>        <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_stage&quot;</span><span class="p">,</span>  <span class="c1"># Transactional</span>
+<a id="__codelineno-24-51" name="__codelineno-24-51" href="#__codelineno-24-51"></a>        <span class="n">stage_attempts</span><span class="o">=</span><span class="mi">3</span>
+<a id="__codelineno-24-52" name="__codelineno-24-52" href="#__codelineno-24-52"></a>    <span class="p">)</span>
+<a id="__codelineno-24-53" name="__codelineno-24-53" href="#__codelineno-24-53"></a>
+<a id="__codelineno-24-54" name="__codelineno-24-54" href="#__codelineno-24-54"></a>    <span class="c1"># Load stage with retries</span>
+<a id="__codelineno-24-55" name="__codelineno-24-55" href="#__codelineno-24-55"></a>    <span class="n">load_stage</span> <span class="o">=</span> <span class="n">Stage</span><span class="p">(</span>
+<a id="__codelineno-24-56" name="__codelineno-24-56" href="#__codelineno-24-56"></a>        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Load&quot;</span><span class="p">,</span>
+<a id="__codelineno-24-57" name="__codelineno-24-57" href="#__codelineno-24-57"></a>        <span class="n">workers</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-24-58" name="__codelineno-24-58" href="#__codelineno-24-58"></a>        <span class="n">tasks</span><span class="o">=</span><span class="p">[</span><span class="n">processor</span><span class="o">.</span><span class="n">load</span><span class="p">],</span>
+<a id="__codelineno-24-59" name="__codelineno-24-59" href="#__codelineno-24-59"></a>        <span class="n">retry</span><span class="o">=</span><span class="s2">&quot;per_task&quot;</span><span class="p">,</span>
+<a id="__codelineno-24-60" name="__codelineno-24-60" href="#__codelineno-24-60"></a>        <span class="n">task_attempts</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<a id="__codelineno-24-61" name="__codelineno-24-61" href="#__codelineno-24-61"></a>        <span class="n">task_wait_seconds</span><span class="o">=</span><span class="mf">3.0</span>
+<a id="__codelineno-24-62" name="__codelineno-24-62" href="#__codelineno-24-62"></a>    <span class="p">)</span>
+<a id="__codelineno-24-63" name="__codelineno-24-63" href="#__codelineno-24-63"></a>
+<a id="__codelineno-24-64" name="__codelineno-24-64" href="#__codelineno-24-64"></a>    <span class="c1"># Build pipeline</span>
+<a id="__codelineno-24-65" name="__codelineno-24-65" href="#__codelineno-24-65"></a>    <span class="n">pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span>
+<a id="__codelineno-24-66" name="__codelineno-24-66" href="#__codelineno-24-66"></a>        <span class="n">stages</span><span class="o">=</span><span class="p">[</span><span class="n">extract_stage</span><span class="p">,</span> <span class="n">transform_stage</span><span class="p">,</span> <span class="n">load_stage</span><span class="p">]</span>
+<a id="__codelineno-24-67" name="__codelineno-24-67" href="#__codelineno-24-67"></a>    <span class="p">)</span>
+<a id="__codelineno-24-68" name="__codelineno-24-68" href="#__codelineno-24-68"></a>
+<a id="__codelineno-24-69" name="__codelineno-24-69" href="#__codelineno-24-69"></a>    <span class="c1"># Process items</span>
+<a id="__codelineno-24-70" name="__codelineno-24-70" href="#__codelineno-24-70"></a>    <span class="n">item_ids</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+<a id="__codelineno-24-71" name="__codelineno-24-71" href="#__codelineno-24-71"></a>    <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">item_ids</span><span class="p">)</span>
+<a id="__codelineno-24-72" name="__codelineno-24-72" href="#__codelineno-24-72"></a>
+<a id="__codelineno-24-73" name="__codelineno-24-73" href="#__codelineno-24-73"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> items&quot;</span><span class="p">)</span>
+<a id="__codelineno-24-74" name="__codelineno-24-74" href="#__codelineno-24-74"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stats: </span><span class="si">{</span><span class="n">pipeline</span><span class="o">.</span><span class="n">get_stats</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-24-75" name="__codelineno-24-75" href="#__codelineno-24-75"></a>
+<a id="__codelineno-24-76" name="__codelineno-24-76" href="#__codelineno-24-76"></a><span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</code></pre></div>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<h3 id="worker-pool-sizing">Worker Pool Sizing<a class="headerlink" href="#worker-pool-sizing" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Extract/Fetch</strong>: More workers (I/O-bound)</li>
+<li><strong>Transform</strong>: Moderate workers (CPU-bound)</li>
+<li><strong>Load/Save</strong>: Fewer workers (rate-limited)</li>
+</ul>
+<h3 id="retry-configuration">Retry Configuration<a class="headerlink" href="#retry-configuration" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Use <strong>per-task</strong> for independent operations</li>
+<li>Use <strong>per-stage</strong> for transactional operations</li>
+<li>Set appropriate <code>task_wait_seconds</code> for rate limiting</li>
+<li>Increase <code>task_attempts</code> for flaky external services</li>
+</ul>
+<h3 id="callbacks">Callbacks<a class="headerlink" href="#callbacks" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Use callbacks for logging and monitoring</li>
+<li>Keep callbacks lightweight (use queues for heavy operations)</li>
+<li>Avoid long-running operations in callbacks</li>
+</ul>
+<h3 id="error-handling_1">Error Handling<a class="headerlink" href="#error-handling_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Always set up <code>on_failure</code> callbacks for production</li>
+<li>Log failed items for later retry/analysis</li>
+<li>Monitor <code>items_failed</code> metric</li>
+</ul>
+<h2 id="advanced-internals">Advanced Internals<a class="headerlink" href="#advanced-internals" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>[!WARNING]
+This section covers internal implementation details. These APIs are protected (<code>_prefix</code>) and may change between minor versions. Use them with caution when building custom subclasses.</p>
+</blockquote>
+<h3 id="internal-queue-structure-_queues">Internal Queue Structure (<code>_queues</code>)<a class="headerlink" href="#internal-queue-structure-_queues" title="Permanent link">&para;</a></h3>
+<p>AntFlow manages data flow between stages using a list of internal queues, accessible via <code>self._queues</code>.</p>
+<ul>
+<li><strong>Type</strong>: <code>List[asyncio.PriorityQueue]</code></li>
+<li><strong>Indexing</strong>: <code>_queues[i]</code> corresponds to <code>stages[i]</code>.</li>
+<li><strong>Item Structure</strong>: Items are stored as tuples to ensure correct priority ordering and FIFO stability:
+    <div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a><span class="p">(</span><span class="n">priority</span><span class="p">,</span> <span class="n">sequence_id</span><span class="p">,</span> <span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">attempt</span><span class="p">))</span>
+</code></pre></div><ul>
+<li><strong>priority</strong> (<code>int</code>): Lower number = higher priority.</li>
+<li><strong>sequence_id</strong> (<code>int</code>): Monotonically increasing counter to ensure FIFO order for same-priority items.</li>
+<li><strong>payload</strong> (<code>dict</code>): The internal item wrapper (see below).</li>
+<li><strong>attempt</strong> (<code>int</code>): Current retry attempt number (1-indexed).</li>
+</ul>
+</li>
+</ul>
+<h3 id="payload-structure-_prepare_payload">Payload Structure (<code>_prepare_payload</code>)<a class="headerlink" href="#payload-structure-_prepare_payload" title="Permanent link">&para;</a></h3>
+<p>When items enter the pipeline (via <code>feed</code> or <code>run</code>), they are wrapped in an internal dictionary structure to track metadata and ensure unique identification. The <code>_prepare_payload(item)</code> method handles this normalization.</p>
+<p><strong>Internal Payload Format:</strong>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="p">{</span>
+<a id="__codelineno-26-2" name="__codelineno-26-2" href="#__codelineno-26-2"></a>    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>          <span class="c1"># Unique identifier (extracted from dict or generated)</span>
+<a id="__codelineno-26-3" name="__codelineno-26-3" href="#__codelineno-26-3"></a>    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>       <span class="c1"># The actual data being processed</span>
+<a id="__codelineno-26-4" name="__codelineno-26-4" href="#__codelineno-26-4"></a>    <span class="s2">&quot;_sequence_id&quot;</span><span class="p">:</span> <span class="nb">int</span> <span class="c1"># Global sequence ID for result ordering</span>
+<a id="__codelineno-26-5" name="__codelineno-26-5" href="#__codelineno-26-5"></a><span class="p">}</span>
+</code></pre></div></p>
+<ul>
+<li><strong>ID Extraction</strong>:<ul>
+<li>If item is a <code>dict</code> and has an "id" key, that is used.</li>
+<li>Otherwise, the item's index in the input iterable is used as the ID.</li>
+</ul>
+</li>
+<li><strong>Value Extraction</strong>:<ul>
+<li>If item is a <code>dict</code> and has a "value" key, that is used.</li>
+<li>Otherwise, the item itself is used as the value.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Example Override:</strong>
+If you need custom ID generation logic, you can override <code>_prepare_payload</code> in a subclass:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">CustomPipeline</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a>    <span class="k">def</span><span class="w"> </span><span class="nf">_prepare_payload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+<a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>        <span class="c1"># Custom logic: use &#39;uuid&#39; field as ID if present</span>
+<a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a>        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;uuid&#39;</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>            <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-27-6" name="__codelineno-27-6" href="#__codelineno-27-6"></a>                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;uuid&#39;</span><span class="p">],</span> 
+<a id="__codelineno-27-7" name="__codelineno-27-7" href="#__codelineno-27-7"></a>                <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">item</span><span class="p">,</span> 
+<a id="__codelineno-27-8" name="__codelineno-27-8" href="#__codelineno-27-8"></a>                <span class="s2">&quot;_sequence_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_msg_counter</span>
+<a id="__codelineno-27-9" name="__codelineno-27-9" href="#__codelineno-27-9"></a>            <span class="p">}</span>
+<a id="__codelineno-27-10" name="__codelineno-27-10" href="#__codelineno-27-10"></a>        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_prepare_payload</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.7a47a382.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.e71a0d61.min.js"></script>
+      
+    
+  </body>
+</html>
