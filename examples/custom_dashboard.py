@@ -24,6 +24,27 @@ async def process_item(x: int) -> dict:
     return {"id": x, "result": x * 2}
 
 
+async def fetch_item(x: int) -> dict:
+    """Fetch stage: int → dict."""
+    await asyncio.sleep(random.uniform(0.05, 0.15))
+    return {"id": x, "data": f"raw_{x}"}
+
+
+async def transform_item(item: dict) -> dict:
+    """Transform stage: dict → dict."""
+    await asyncio.sleep(random.uniform(0.05, 0.1))
+    if random.random() < 0.1:
+        raise ValueError("Random error")
+    item["transformed"] = True
+    return item
+
+
+async def save_item(item: dict) -> str:
+    """Save stage: dict → str."""
+    await asyncio.sleep(random.uniform(0.03, 0.08))
+    return f"saved_{item['id']}"
+
+
 class SimpleDashboard:
     """Minimal dashboard that prints updates to console."""
 
@@ -181,9 +202,9 @@ async def main():
     print("Shows per-stage progress for pipelines with multiple stages.\n")
     pipeline = Pipeline(
         stages=[
-            Stage(name="Fetch", workers=3, tasks=[process_item], task_attempts=2),
-            Stage(name="Transform", workers=2, tasks=[process_item], task_attempts=2),
-            Stage(name="Save", workers=2, tasks=[process_item], task_attempts=2),
+            Stage(name="Fetch", workers=3, tasks=[fetch_item], task_attempts=2),
+            Stage(name="Transform", workers=2, tasks=[transform_item], task_attempts=2),
+            Stage(name="Save", workers=2, tasks=[save_item], task_attempts=2),
         ]
     )
     results = await pipeline.run(items, custom_dashboard=MultiStageDashboard())
