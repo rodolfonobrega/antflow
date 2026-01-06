@@ -514,7 +514,7 @@ async def main():
             Stage("Fetch", workers=3, tasks=[fetch]),
             Stage("Process", workers=5, tasks=[process]),
         ],
-        tracker=tracker,
+        status_tracker=tracker,
     )
 
     results = await pipeline.run(items)  # Callbacks fire during execution
@@ -545,7 +545,7 @@ async def log_failures(event: StatusEvent):
 
 tracker = StatusTracker(on_status_change=log_failures)
 
-pipeline = Pipeline(stages=[...], tracker=tracker)
+pipeline = Pipeline(stages=[...], status_tracker=tracker)
 
 # Dashboard for UI + callbacks for logging
 results = await pipeline.run(items, dashboard="compact")

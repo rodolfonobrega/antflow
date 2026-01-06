@@ -138,9 +138,7 @@ Pipeline provides multiple ways to handle failures:
 ```python
 from antflow import Stage
 
-async def on_failure(payload):
-    item_id = payload['id']
-    error = payload['error']
+async def on_failure(item_id, error, metadata):
     print(f"Stage failed for item {item_id}: {error}")
     # Log to monitoring system, send alert, etc.
 
@@ -152,21 +150,19 @@ stage = Stage(
 )
 ```
 
-#### Task-Level Callbacks
+#### Task-Level Callbacks (via StatusTracker)
+
+For granular tracking, use task-level callbacks on the `StatusTracker`:
 
 ```python
-from antflow import Stage
+from antflow import StatusTracker, TaskEvent
 
-async def on_task_failure(task_name, item_id, error):
-    print(f"Task {task_name} failed for item {item_id}")
-    print(f"Error: {error}")
-    # Record failure for analysis
+async def on_task_fail(event: TaskEvent):
+    print(f"Task {event.task_name} failed for item {event.item_id}")
+    print(f"Error: {event.error}")
 
-stage = Stage(
-    name="DetailedStage",
-    workers=2,
-    tasks=[task1, task2],
-    on_task_failure=on_task_failure
+tracker = StatusTracker(
+    on_task_fail=on_task_fail
 )
 ```
 
@@ -177,11 +173,10 @@ from antflow import Pipeline, Stage
 
 failed_items = []
 
-async def collect_failures(payload):
+async def collect_failures(item_id, error, metadata):
     failed_items.append({
-        'id': payload['id'],
-        'error': payload['error'],
-        'stage': payload['stage']
+        'id': item_id,
+        'error': error
     })
 
 stage = Stage(
@@ -201,6 +196,29 @@ print(f"Succeeded: {len(results)}")
 print(f"Failed: {len(failed_items)}")
 for failed in failed_items:
     print(f"  Item {failed['id']}: {failed['error']}")
+
+## Error Summary API
+
+As of version 0.6.0, AntFlow provides a high-level error summary API. If a `StatusTracker` is configured, it provides a detailed report of all failures.
+
+```python
+results = await pipeline.run(items)
+summary = pipeline.get_error_summary()
+
+print(f"Total failed: {summary.total_failed}")
+
+# Grouped by stage
+for stage, count in summary.errors_by_stage.items():
+    print(f"Stage {stage}: {count} errors")
+
+# Grouped by error type
+for err_type, count in summary.errors_by_type.items():
+    print(f"Error {err_type}: {count} occurrences")
+
+# List of all failed items with details
+for item in summary.failed_items:
+    print(f"Item {item.item_id} failed in {item.stage} "
+          f"after {item.attempts} attempts. Error: {item.error}")
 ```
 
 ## Retry Strategies
@@ -253,8 +271,7 @@ from antflow.utils import extract_exception
 from tenacity import RetryError
 
 # In callbacks, errors are already extracted
-async def on_failure(payload):
-    error = payload['error']  # Already the original exception message
+async def on_failure(item_id, error, metadata):
     print(f"Original error: {error}")
 
 # Manual extraction if needed
@@ -301,14 +318,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-async def log_failure(payload):
+async def log_failure(item_id, error, metadata):
     logger.error(
-        "Stage failure",
-        extra={
-            'item_id': payload['id'],
-            'stage': payload['stage'],
-            'error': payload['error']
-        }
+        f"Stage failure for item {item_id}: {error}"
     )
 
 stage = Stage(
@@ -370,15 +382,12 @@ Handle failures gracefully without stopping the entire pipeline:
 ```python
 from antflow import Pipeline
 
-async def on_failure(payload):
+async def on_failure(item_id, error, metadata):
     # Log the failure
-    logger.error(f"Item {payload['id']} failed: {payload['error']}")
+    logger.error(f"Item {item_id} failed: {error}")
 
     # Store for later retry
-    await failed_queue.put(payload)
-
-    # Update metrics
-    metrics.increment('pipeline.failures')
+    await failed_queue.put({"id": item_id, "error": error})
 
 # Pipeline continues processing other items
 pipeline = Pipeline(stages=[stage])
@@ -399,18 +408,11 @@ from antflow import Pipeline, Stage
 
 logger = logging.getLogger(__name__)
 
-# Track failures
-failures = []
+async def on_stage_failure(item_id, error, metadata):
+    logger.error(f"Stage failure for item {item_id}: {error}")
 
-async def on_stage_failure(payload):
-    failures.append(payload)
-    logger.error(
-        f"Stage {payload['stage']} failed for item {payload['id']}: "
-        f"{payload['error']}"
-    )
-
-async def on_task_retry(task_name, item_id, error):
-    logger.warning(f"Retrying {task_name} for item {item_id}: {error}")
+async def on_task_retry(event):
+    logger.warning(f"Retrying {event.task_name} for item {event.item_id}: {event.error}")
 
 async def fetch_data(item_id):
     # May fail due to network issues
@@ -427,6 +429,9 @@ async def save_data(data):
     ...
 
 async def main():
+    # Tracker handles task-level events
+    tracker = StatusTracker(on_task_retry=on_task_retry)
+
     # Fetch stage: retry on network errors
     fetch_stage = Stage(
         name="Fetch",
@@ -435,8 +440,7 @@ async def main():
         retry="per_task",
         task_attempts=5,
         task_wait_seconds=2.0,
-        on_failure=on_stage_failure,
-        on_task_retry=on_task_retry
+        on_failure=on_stage_failure
     )
 
     # Validate stage: don't retry validation errors
@@ -457,29 +461,24 @@ async def main():
         retry="per_task",
         task_attempts=5,
         task_wait_seconds=3.0,
-        on_failure=on_stage_failure,
-        on_task_retry=on_task_retry
+        on_failure=on_stage_failure
     )
 
     pipeline = Pipeline(
-        stages=[fetch_stage, validate_stage, save_stage]
+        stages=[fetch_stage, validate_stage, save_stage],
+        status_tracker=tracker
     )
 
     items = range(100)
     results = await pipeline.run(items)
 
-    # Report results
-    stats = pipeline.get_stats()
-    logger.info(f"Processed: {stats.items_processed}")
-    logger.info(f"Failed: {stats.items_failed}")
-    logger.info(f"Success rate: {stats.items_processed/len(items)*100:.1f}%")
-
-    # Handle failures
-    if failures:
-        logger.warning(f"{len(failures)} items require manual intervention")
-        for failure in failures:
-            # Store in dead letter queue, send alert, etc.
-            await handle_permanent_failure(failure)
+    # Report results using Error Summary API
+    summary = pipeline.get_error_summary()
+    logger.info(f"Processed: {len(results)}")
+    logger.info(f"Failed: {summary.total_failed}")
+    
+    if summary.total_failed > 0:
+        logger.warning(f"Errors by stage: {summary.errors_by_stage}")
 
 asyncio.run(main())
 ```
@@ -496,31 +495,28 @@ logger = logging.getLogger('antflow')
 logger.setLevel(logging.DEBUG)
 ```
 
-### Use Task-Level Callbacks
+### Use Task-Level Callbacks (via StatusTracker)
 
 Get detailed information about task execution:
 
 ```python
 import logging
-from antflow import Stage
+from antflow import StatusTracker, TaskEvent
 
 logger = logging.getLogger(__name__)
 
-async def on_task_start(task_name, item_id, value):
-    logger.debug(f"Starting {task_name} for item {item_id}")
+async def on_task_start(event: TaskEvent):
+    logger.debug(f"Starting {event.task_name} for item {event.item_id}")
 
-async def on_task_failure(task_name, item_id, error):
-    logger.error(f"Task {task_name} failed for item {item_id}: {error}")
-    # Include stack trace in logs
-    logger.exception("Full traceback:", exc_info=error)
+async def on_task_fail(event: TaskEvent):
+    logger.error(f"Task {event.task_name} failed for item {event.item_id}: {event.error}")
 
-stage = Stage(
-    name="Debug",
-    workers=1,
-    tasks=[task],
+tracker = StatusTracker(
     on_task_start=on_task_start,
-    on_task_failure=on_task_failure
+    on_task_fail=on_task_fail
 )
+
+pipeline = Pipeline(stages=[stage], status_tracker=tracker)
 ```
 
 ### Check Pipeline Stats

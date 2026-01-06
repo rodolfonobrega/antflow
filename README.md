@@ -89,7 +89,6 @@ I built AntFlow to solve this exact problem. Instead of batch-by-batch processin
 ### ✨ **Fluent APIs** (NEW)
 - **`Pipeline.quick()`** - One-liner for simple pipelines
 - **`Pipeline.create()`** - Fluent builder pattern
-- **Stage Presets** - `io_bound()`, `cpu_bound()`, `rate_limited()`
 - **Result Streaming** - `pipeline.stream()` for processing results as they complete
 
 ---
@@ -123,51 +122,65 @@ pip install antflow
 
 AntFlow offers **three equivalent ways** to create pipelines. Choose based on your needs:
 
-### Method 1: Stage Objects (Full Control)
-
-Use explicit `Stage` objects when you need fine-grained control:
+### Method 1: Fluent Builder API (Concise & Recommended)
 
 ```python
+import asyncio
+from antflow import Pipeline
+
+async def fetch(x):
+    await asyncio.sleep(0.1)
+    return f"data_{x}"
+
+async def main():
+    items = range(10)
+    results = await (
+        Pipeline.create()
+        .add("Fetch", fetch, workers=5, retries=3)
+        .run(items, progress=True)
+    )
+    print(f"Processed {len(results)} items")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Method 2: Stage Objects (Full Control)
+
+```python
+import asyncio
 from antflow import Pipeline, Stage
 
-# Define stages explicitly
-fetch_stage = Stage(name="Fetch", workers=10, tasks=[fetch_data], retry="per_task", task_attempts=3)
-process_stage = Stage(name="Process", workers=5, tasks=[transform])
-save_stage = Stage(name="Save", workers=3, tasks=[save_to_db])
+async def process(x):
+    await asyncio.sleep(0.1)
+    return x * 2
 
-# Build and run pipeline
-pipeline = Pipeline(stages=[fetch_stage, process_stage, save_stage])
-results = await pipeline.run(items, progress=True)
+async def main():
+    items = range(10)
+    stage = Stage(name="Process", workers=5, tasks=[process])
+    pipeline = Pipeline(stages=[stage])
+    results = await pipeline.run(items, progress=True)
+    print(f"Processed {len(results)} items")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-### Method 2: Fluent Builder API (Concise)
-
-Use `Pipeline.create().add()` for a chainable, readable syntax:
+### Method 3: Quick One-Liner
 
 ```python
+import asyncio
 from antflow import Pipeline
 
-results = await (
-    Pipeline.create()
-    .add("Fetch", fetch_data, workers=10, retries=3)
-    .add("Process", transform, workers=5)
-    .add("Save", save_to_db, workers=3)
-    .run(items, progress=True)
-)
-```
+async def simple_task(x):
+    return x + 1
 
-### Method 3: Quick One-Liner (Simple Cases)
+async def main():
+    results = await Pipeline.quick(range(10), simple_task, workers=5, progress=True)
+    print(f"Processed {len(results)} items")
 
-Use `Pipeline.quick()` for simple scripts:
-
-```python
-from antflow import Pipeline
-
-# Single task
-results = await Pipeline.quick(items, process, workers=10, progress=True)
-
-# Multiple tasks (one stage per task)
-results = await Pipeline.quick(items, [fetch, process, save], workers=5)
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### Which Method to Choose?
@@ -180,43 +193,26 @@ results = await Pipeline.quick(items, [fetch, process, save], workers=5)
 
 All three methods produce the same result - they're just different ways to express the same thing.
 
-### Stage Presets
-
-Pre-configured stages for common patterns:
-
-```python
-from antflow import Stage
-
-# I/O bound tasks (API calls, file ops) - 10 workers, 3 retries
-stage = Stage.io_bound("Fetch", fetch_data, workers=20)
-
-# CPU bound tasks - workers = CPU count, 1 retry
-stage = Stage.cpu_bound("Process", transform_data)
-
-# Rate-limited APIs - enforces RPS limit
-stage = Stage.rate_limited("API", call_external_api, rps=5)
-```
 
 ### Built-in Progress & Dashboards
 
 All display options are **optional**. By default, pipelines run silently.
 
 ```python
-# No display (silent) - default
-results = await pipeline.run(items)
+import asyncio
+from antflow import Pipeline
 
-# Simple progress bar - shows END-TO-END progress only
-results = await pipeline.run(items, progress=True)
-# [████████████░░░░░░░░░░░░░░░░░░] 42% | 126/300 | 24.5/s
+async def task(x):
+    await asyncio.sleep(0.01)
+    return x * 2
 
-# Compact dashboard - overall progress + current stage activity
-results = await pipeline.run(items, dashboard="compact")
+async def main():
+    items = range(50)
+    # Dashboard options: "compact", "detailed", "full"
+    results = await Pipeline.quick(items, task, workers=5, dashboard="detailed")
 
-# Detailed dashboard - PER-STAGE progress table (recommended for multi-stage)
-results = await pipeline.run(items, dashboard="detailed")
-
-# Full dashboard - everything + worker states + error log
-results = await pipeline.run(items, dashboard="full")
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 > **Tip:** For multi-stage pipelines, use `dashboard="detailed"` to see progress per stage and identify bottlenecks.
@@ -226,10 +222,21 @@ results = await pipeline.run(items, dashboard="full")
 Process results as they complete:
 
 ```python
-async for result in pipeline.stream(items):
-    print(f"Got: {result.value}")
-    if some_condition:
-        break  # Early exit supported
+import asyncio
+from antflow import Pipeline
+
+async def process(x):
+    await asyncio.sleep(0.1)
+    return f"result_{x}"
+
+async def main():
+    pipeline = Pipeline.create().add("Process", process, workers=5).build()
+    
+    async for result in pipeline.stream(range(10)):
+        print(f"Got: {result.value}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ---
@@ -243,28 +250,37 @@ import asyncio
 from antflow import Pipeline, Stage
 
 async def upload_batch(batch_data):
+    await asyncio.sleep(0.1)
     return "batch_id"
 
 async def check_status(batch_id):
+    await asyncio.sleep(0.1)
     return "result_url"
 
 async def download_results(result_url):
+    await asyncio.sleep(0.1)
     return "processed_data"
 
 async def save_to_db(processed_data):
+    await asyncio.sleep(0.1)
     return "saved"
 
-# Build the pipeline with explicit stages
-upload_stage = Stage(name="Upload", workers=10, tasks=[upload_batch])
-check_stage = Stage(name="Check", workers=10, tasks=[check_status])
-download_stage = Stage(name="Download", workers=10, tasks=[download_results])
-save_stage = Stage(name="Save", workers=5, tasks=[save_to_db])
+async def main():
+    # Build the pipeline with explicit stages
+    upload_stage = Stage(name="Upload", workers=10, tasks=[upload_batch])
+    check_stage = Stage(name="Check", workers=10, tasks=[check_status])
+    download_stage = Stage(name="Download", workers=10, tasks=[download_results])
+    save_stage = Stage(name="Save", workers=5, tasks=[save_to_db])
 
-pipeline = Pipeline(stages=[upload_stage, check_stage, download_stage, save_stage])
+    pipeline = Pipeline(stages=[upload_stage, check_stage, download_stage, save_stage])
 
-# Process with progress bar
-batches = ["batch1", "batch2", "batch3"]
-results = await pipeline.run(batches, progress=True)
+    # Process with progress bar
+    batches = ["batch1", "batch2", "batch3"]
+    results = await pipeline.run(batches, progress=True)
+    print(f"Results: {len(results)} items")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 **What happens**: Each stage has its own worker pool. Workers process tasks independently. As soon as a worker finishes, it picks the next task. No waiting. No idle time. Maximum throughput.
@@ -317,21 +333,20 @@ async def save(x):
 
 async def main():
     # Define stages with different worker counts
-    fetch_stage = Stage(name="Fetch",        workers=5,
-        tasks=[fetch_data, process_data],
+    fetch_stage = Stage(
+        name="Fetch",
+        workers=10,
+        tasks=[fetch],
         # Limit specific tasks to avoid rate limits
-        task_concurrency_limits={
-            "fetch_data": 2  # Only 2 concurrent fetch_data calls
-        }
+        task_concurrency_limits={"fetch": 2}
     )
-    process_stage = Stage(name="Process", workers=5, tasks=[process_data])
+    
+    process_stage = Stage(name="Process", workers=5, tasks=[process])
     save_stage = Stage(name="Save", workers=3, tasks=[save])
 
-    # Build pipeline
+    # Build and run pipeline
     pipeline = Pipeline(stages=[fetch_stage, process_stage, save_stage])
-
-    # Process 100 items through all stages
-    results = await pipeline.run(range(100))
+    results = await pipeline.run(range(50), progress=True)
 
     print(f"Completed: {len(results)} items")
     print(f"Stats: {pipeline.get_stats()}")

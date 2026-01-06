@@ -3,7 +3,6 @@ AntFlow: Async execution library with concurrent.futures-style API and advanced 
 """
 
 from ._version import __version__
-from .dashboard import PipelineDashboard
 from .exceptions import (
     AntFlowError,
     ExecutorShutdownError,
@@ -43,7 +42,6 @@ __all__ = [
     "PipelineResult",
     "Pipeline",
     "PipelineBuilder",
-    "PipelineDashboard",
     "PipelineError",
     "PipelineStats",
     "Stage",

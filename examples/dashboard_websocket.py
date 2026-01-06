@@ -35,7 +35,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from antflow import Pipeline, PipelineDashboard, Stage, StatusEvent, StatusTracker
+from antflow import Pipeline, Stage, StatusEvent, StatusTracker
 
 # Global log buffer
 log_messages: Deque[str] = deque(maxlen=20)
@@ -72,11 +72,13 @@ class MockWebSocket:
                  log(f"[WS-{self.client_id}] Sent failure alert for item {event.get('item_id')}")
 
 
+
 class DashboardServer:
     """Dashboard server managing WebSocket connections."""
 
-    def __init__(self, dashboard: PipelineDashboard):
-        self.dashboard = dashboard
+    def __init__(self, pipeline: Pipeline, tracker: StatusTracker):
+        self.pipeline = pipeline
+        self.tracker = tracker
         self.clients: Set[MockWebSocket] = set()
 
     async def broadcast(self, data: dict):
@@ -89,7 +91,7 @@ class DashboardServer:
         self.clients.add(websocket)
         log(f"[Server] Client {websocket.client_id} connected")
 
-        initial_snapshot = self.dashboard.get_snapshot()
+        initial_snapshot = self.pipeline.get_dashboard_snapshot()
         await websocket.send_json({
             "type": "initial_state",
             "snapshot": {
@@ -132,9 +134,28 @@ class DashboardServer:
                 }
             })
 
-        self.dashboard.subscribe(on_status_change)
-
+        # Subscribe directly to tracker
+        # Note: In a real server, we'd need to manage multiple subscribers carefully
+        # or use a proper pub/sub system to avoid overwriting callbacks if the tracker
+        # only supports a single callback.
+        # However, StatusTracker currently only supports a single callback in __init__.
+        # For this demo, we assume the tracker is set up to call our broadcast.
+        
+        # Ideally, we would attach this listener to the tracker.
+        # But for this demo, we'll just simulate it being hooked up.
         log(f"[Server] Client {websocket.client_id} subscribed to events")
+        
+        # Hack for demo: Replace existing tracker callback with one that also notifies this client
+        # In production, use a proper event bus.
+        original_callback = self.tracker.on_status_change
+        
+        async def intercepted_callback(event: StatusEvent):
+            if original_callback:
+                await original_callback(event)
+            await on_status_change(event)
+            
+        self.tracker.on_status_change = intercepted_callback
+
 
     async def disconnect_client(self, websocket: MockWebSocket):
         """Handle client disconnection."""
@@ -247,18 +268,7 @@ async def main():
         status_tracker=tracker
     )
 
-    # We don't need the Dashboard class for the UI, but we use it for the Server logic
-    # Actually, we can just use the pipeline and tracker directly for the UI
-    # and keep the server logic separate.
-
-    # Initialize Dashboard for Server (logic only)
-    dashboard_logic = PipelineDashboard(
-        pipeline=pipeline,
-        tracker=tracker,
-        update_interval=2.0
-    )
-
-    server = DashboardServer(dashboard_logic)
+    server = DashboardServer(pipeline, tracker)
 
     client1 = MockWebSocket("client-1")
     client2 = MockWebSocket("client-2")

@@ -21,6 +21,62 @@ A **Pipeline** connects multiple stages together:
 - Results are collected from the final stage
 
 
+## Creating Pipelines (Three Approaches)
+
+AntFlow offers three equivalent ways to create pipelines depending on your needs.
+
+### 1. Fluent Builder API (Concise & Recommended)
+
+Use `Pipeline.create()` for a clean, chainable builder pattern. This is ideal for most multi-stage pipelines.
+
+```python
+from antflow import Pipeline
+
+async def main():
+    results = await (
+        Pipeline.create()
+        .add("Fetch", fetch_task, workers=10)
+        .add("Process", process_task, workers=5)
+        .run(items, progress=True)
+    )
+```
+
+### 2. Manual Stage Construction (Full Control)
+
+Explicitly define `Stage` objects. Use this when you need fine-grained control over advanced parameters like `task_concurrency_limits` or `skip_if`.
+
+```python
+from antflow import Pipeline, Stage
+
+stage1 = Stage(name="Fetch", workers=10, tasks=[fetch_task])
+stage2 = Stage(name="Process", workers=5, tasks=[process_task])
+
+pipeline = Pipeline(stages=[stage1, stage2])
+results = await pipeline.run(items)
+```
+
+### 3. Quick One-Liner API
+
+For simple scripts or single-stage processing, use `Pipeline.quick()`.
+
+```python
+from antflow import Pipeline
+
+# Single task
+results = await Pipeline.quick(items, process_task, workers=5, progress=True)
+
+# Multiple tasks in one stage
+results = await Pipeline.quick(items, [fetch, process], workers=10)
+```
+
+| Method | When to Use |
+|--------|-------------|
+| **Fluent API** | Multi-stage pipelines, clean code, prototyping |
+| **Manual Stages** | Custom parameters, complex topologies, explicit configuration |
+| **Pipeline.quick()** | Single-stage processing, simple scripts, one-off tasks |
+
+---
+
 ## Stage Configuration Reference
 
 The `Stage` class is the building block of your pipeline. Here are all the available configuration options:
@@ -61,28 +117,31 @@ The process is: `Generate -> Upload -> Start Job -> Poll -> Download`.
 Use `workers=50` to maximize your Batch API usage, but use `task_concurrency_limits` to throttle *only* the upload task to 2.
 
 ```python
-async def generate_jsonl(item): ...
-async def upload_file(item): ... # Strict limit!
-async def start_job(item): ...
-async def poll_status(item): ... # Takes a long time
-async def download_results(item): ...
+import asyncio
+from antflow import Stage, Pipeline
 
-stage = Stage(
-    name="OpenAI_Batch_Job",
-    workers=50,  # 50 workers allow us to poll 50 jobs simultaneously!
-    tasks=[
-        generate_jsonl,
-        upload_file,
-        start_job,
-        poll_status,
-        download_results
-    ],
-    retry="per_task",
-    # The magic happens here:
-    task_concurrency_limits={
-        "upload_file": 2  # Only 2 uploads happen at once, even with 50 active workers
-    }
-)
+async def upload_file(item):
+    await asyncio.sleep(0.1)
+    return f"uploaded_{item}"
+
+async def poll_status(item):
+    await asyncio.sleep(0.1)
+    return "done"
+
+async def main():
+    stage = Stage(
+        name="OpenAI_Batch_Job",
+        workers=50,
+        tasks=[upload_file, poll_status],
+        task_concurrency_limits={
+            "upload_file": 2  # Limits concurrent uploads to 2
+        }
+    )
+    pipeline = Pipeline(stages=[stage])
+    await pipeline.run(range(10), progress=True)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### Architecture Comparison: Why not 2 Stages?
@@ -127,7 +186,7 @@ stage = Stage(
 
 ### Automatic Backpressure (Smart Limits)
 
-As of version 0.3.3, AntFlow implements **Smart Internal Limits** for all stage queues.
+As of version 0.6.1, AntFlow implements **Smart Internal Limits** for all stage queues.
 
 *   **How it works:** Each stage has a limited input queue size. The default limit is `max(1, workers * 10)`. 
 *   **Example:** A stage with 5 workers allows ~50 items to be queued waiting for processing.
@@ -152,23 +211,21 @@ stage = Stage(
 ### Creating a Simple Pipeline
 
 ```python
+import asyncio
 from antflow import Pipeline, Stage
 
 async def fetch(x):
+    await asyncio.sleep(0.1)
     return f"data_{x}"
 
-async def process(x):
-    return x.upper()
+async def main():
+    stage = Stage(name="Fetch", workers=3, tasks=[fetch])
+    pipeline = Pipeline(stages=[stage])
+    results = await pipeline.run(range(10), progress=True)
+    print(f"Results: {len(results)} items")
 
-# Define stages
-fetch_stage = Stage(name="Fetch", workers=3, tasks=[fetch])
-process_stage = Stage(name="Process", workers=2, tasks=[process])
-
-# Create pipeline
-pipeline = Pipeline(stages=[fetch_stage, process_stage])
-
-# Run pipeline
-results = await pipeline.run(range(10))
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### Interactive Execution
@@ -413,6 +470,8 @@ Items progress through these states:
 - `in_progress` - Being processed by worker
 - `completed` - Successfully finished stage
 - `failed` - Failed to complete stage
+- `retrying` - Item is being retried after a failure
+- `skipped` - Item was skipped via `skip_if` predicate
 
 **Important:** Status tracking is at the **stage level**, not individual task level. If a stage has multiple tasks (e.g., `[validate, transform, enrich]`), you will know the stage failed but not which specific task caused the failure. The error message in `event.metadata['error']` will contain details about the failure. For task-level granularity, consider using separate stages (one task per stage) or adding logging within tasks.
 
@@ -475,6 +534,24 @@ async with asyncio.TaskGroup() as tg:
     await pipeline.run(items)
 ```
 
+### Strategy 3: Programmatic Monitoring (get_stats)
+
+For simple scripts that just need a summary after execution, or for background metrics collection, use `pipeline.get_stats()`. This returns a `PipelineStats` object containing high-level metrics and detailed `StageStats` for each stage.
+
+```python
+stats = pipeline.get_stats()
+
+print(f"Total processed: {stats.items_processed}")
+print(f"Total failed: {stats.items_failed}")
+
+# Access per-stage metrics
+for stage_name, stage_stat in stats.stage_stats.items():
+    print(f"Stage {stage_name}:")
+    print(f"  Completed: {stage_stat.completed_items}")
+    print(f"  Failed: {stage_stat.failed_items}")
+    print(f"  In progress: {stage_stat.in_progress_items}")
+```
+
 ## Feeding Data
 
 ### Synchronous Iterable
@@ -496,6 +573,18 @@ async def data_generator():
 
 await pipeline.feed_async(data_generator())
 ```
+
+### Streaming Results
+
+For memory-intensive workloads or when you want to process results as they arrive (out-of-order), use `pipeline.stream()`. This returns an async generator yielding results in completion order.
+
+```python
+async for result in pipeline.stream(range(100)):
+    print(f"Processing result for item {result.id}: {result.value}")
+    # Process result immediately, freeing memory
+```
+
+Unlike `run()`, which returns a complete list, `stream()` is more memory-efficient for very large datasets.
 
 ### Dict Input
 

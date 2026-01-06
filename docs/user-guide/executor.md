@@ -116,7 +116,34 @@ async with AsyncExecutor(max_workers=5) as executor:
     async for future in executor.as_completed(futures):
         result = await future.result()
         print(f"Got: {result}")
+
+## Wait Strategies
+
+For more complex coordination of multiple futures, use `AsyncExecutor.wait()`. This allows you to wait for a collection of futures with different completion requirements.
+
+```python
+from antflow import AsyncExecutor, WaitStrategy
+
+async with AsyncExecutor(max_workers=5) as executor:
+    futures = [executor.submit(long_task, i) for i in range(10)]
+
+    # Wait until ALL tasks are completed (default)
+    done, pending = await executor.wait(futures, return_when=WaitStrategy.ALL_COMPLETED)
+
+    # Return as soon as ANY task is completed
+    done, pending = await executor.wait(futures, return_when=WaitStrategy.FIRST_COMPLETED)
+
+    # Return when ANY task raises an exception
+    done, pending = await executor.wait(futures, return_when=WaitStrategy.FIRST_EXCEPTION)
 ```
+
+| Strategy | Description |
+|----------|-------------|
+| `ALL_COMPLETED` | Return only when all futures have finished. |
+| `FIRST_COMPLETED` | Return when at least one future has finished. |
+| `FIRST_EXCEPTION` | Return when any future finishes with an exception. |
+
+---
 
 ## map() vs as_completed(): When to Use Each
 

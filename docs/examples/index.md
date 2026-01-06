@@ -7,8 +7,9 @@ This directory contains a comprehensive list of example scripts available in the
 | Example | Description |
 |---------|-------------|
 | **[basic_executor.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/basic_executor.py)** | Simple usage of `AsyncExecutor` for concurrent task execution. |
-| **[basic_pipeline.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/basic_pipeline.py)** | Basic `Pipeline` setup with sequential stages. |
-| **[wait_example.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/wait_example.py)** | Demonstrates different `WaitStrategy` options (`ALL_COMPLETED`, `FIRST_COMPLETED`, etc.). |
+| **[basic_example.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/basic_example.py)** | Basic `Pipeline` setup with sequential stages. |
+| **[executor_wait_strategies.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/executor_wait_strategies.py)** | Demonstrates different `WaitStrategy` options for `AsyncExecutor`. |
+| **[builder_pattern.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/builder_pattern.py)** | Using the `PipelineBuilder` (Fluent API) to construct pipelines. |
 
 ## Pipeline Patterns
 
@@ -16,23 +17,24 @@ This directory contains a comprehensive list of example scripts available in the
 |---------|-------------|
 | **[advanced_pipeline.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/advanced_pipeline.py)** | Complex pipeline with multiple stages, retries, and error handling. |
 | **[real_world_example.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/real_world_example.py)** | A realistic ETL scenario simulating data ingestion, processing, and storage. |
+| **[streaming_results.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/streaming_results.py)** | Processing results as they complete using the `stream()` method. |
+| **[resume_checkpoint.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/resume_checkpoint.py)** | Manual checkpointing and resuming pipeline execution from a specific point. |
+| **[backpressure_demo.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/backpressure_demo.py)** | Smart backpressure propagation between stages with bounded queues. |
 
 ## Monitoring & Tracking
 
 | Example | Description |
 |---------|-------------|
-| **[status_tracking.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/status_tracking.py)** | Basic usage of `StatusTracker` to monitor item progress. |
-| **[task_level_tracking.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/task_level_tracking.py)** | Granular tracking of individual task execution events. |
-| **[worker_tracking.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/worker_tracking.py)** | Monitoring the state and activity of individual workers. |
-| **[worker_monitoring.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/worker_monitoring.py)** | Advanced worker monitoring patterns. |
+| **[monitoring_status_tracker.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/monitoring_status_tracker.py)** | Basic usage of `StatusTracker` to monitor item progress via events. |
+| **[monitoring_workers.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/monitoring_workers.py)** | Monitoring the state and activity of individual workers. |
 
 ## Dashboards
 
 | Example | Description |
 |---------|-------------|
-| **[rich_polling_dashboard.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/rich_polling_dashboard.py)** | **Recommended**: A beautiful, real-time terminal dashboard using the `rich` library (Polling approach). |
-| **[rich_callback_dashboard.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/rich_callback_dashboard.py)** | Event-driven dashboard using callbacks for immediate updates. |
-| **[dashboard_websocket.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/dashboard_websocket.py)** | Example of serving pipeline metrics over a WebSocket for web dashboards. |
+| **[dashboard_levels.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/dashboard_levels.py)** | **Recommended**: Comparing `compact`, `detailed`, and `full` built-in dashboards. |
+| **[custom_dashboard.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/custom_dashboard.py)** | Implementing a custom dashboard class using `DashboardProtocol`. |
+| **[web_dashboard/](https://github.com/rodolfonobrega/antflow/blob/main/examples/web_dashboard/)** | Complete FastAPI + WebSocket dashboard for web browsers. |
 
 ## Detailed Guides
 
@@ -40,3 +42,5 @@ For step-by-step explanations of these concepts, check out our guide pages:
 
 - [Basic Examples](basic.md)
 - [Advanced Examples](advanced.md)
+- [Pipeline Guide](../user-guide/pipeline.md)
+- [Dashboard Guide](../user-guide/dashboard.md)

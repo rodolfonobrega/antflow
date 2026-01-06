@@ -7,7 +7,17 @@ AntFlow provides built-in progress visualization options that require zero confi
 The simplest way to add progress visualization is with the `progress=True` flag:
 
 ```python
-results = await pipeline.run(items, progress=True)
+import asyncio
+from antflow import Pipeline
+
+async def task(x):
+    return x * 2
+
+async def main():
+    results = await Pipeline.quick(range(100), task, workers=10, progress=True)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 This displays a minimal progress bar in your terminal:
@@ -21,14 +31,20 @@ This displays a minimal progress bar in your terminal:
 For more detailed monitoring, use the `dashboard` parameter:
 
 ```python
-# Compact dashboard - essential metrics only
-results = await pipeline.run(items, dashboard="compact")
+import asyncio
+from antflow import Pipeline
 
-# Detailed dashboard - per-stage metrics and worker counts
-results = await pipeline.run(items, dashboard="detailed")
+async def task(x):
+    await asyncio.sleep(0.01)
+    return x * 2
 
-# Full dashboard - complete monitoring with item tracking
-results = await pipeline.run(items, dashboard="full")
+async def main():
+    items = range(100)
+    # Use: "compact", "detailed", or "full"
+    results = await Pipeline.quick(items, task, workers=5, dashboard="detailed")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ### Compact Dashboard
@@ -69,11 +85,23 @@ The most comprehensive option, showing:
 For item tracking, add a `StatusTracker`:
 
 ```python
-from antflow import Pipeline, Stage, StatusTracker
+import asyncio
+from antflow import Pipeline, StatusTracker
 
-tracker = StatusTracker()
-pipeline = Pipeline(stages=[...], status_tracker=tracker)
-results = await pipeline.run(items, dashboard="full")
+async def task(x):
+    return x
+
+async def main():
+    tracker = StatusTracker()
+    results = await (
+        Pipeline.create()
+        .add("Process", task, workers=5)
+        .with_tracker(tracker)
+        .run(range(50), dashboard="full")
+    )
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 ## Using with Pipeline.quick()

@@ -1,380 +1,183 @@
-# Dashboard and Real-Time Monitoring
+# Dashboard and Monitoring
 
-AntFlow provides comprehensive tools for monitoring pipeline execution in real-time, including worker states, performance metrics, and dashboard helpers.
+AntFlow provides comprehensive tools for monitoring pipeline execution in real-time. You can choose from simple progress bars, detailed built-in dashboards, or build your own custom monitoring solution.
 
-## Overview
+## Built-in Dashboards
 
-The dashboard functionality provides:
+Built-in dashboards are the easiest way to monitor your pipeline. They use the `rich` library to provide beautiful, real-time terminal UIs with zero configuration.
 
-- **Worker State Tracking**: Know what each worker is doing at any moment
-- **Performance Metrics**: Track items processed, failures, and average processing time per worker
-- **Snapshot API**: Query current state for dashboards and UIs
-- **Event Streaming**: Subscribe to real-time status changes
-- **PipelineDashboard Helper**: Combines queries and events for efficient monitoring
+### Dashboard Levels
 
-## Quick Start
+| Option | What it Shows | Best For |
+|--------|---------------|----------|
+| `progress=True` | Minimal end-to-end progress bar | Simple scripts |
+| `dashboard="compact"` | Single panel with rate, ETA, and progress | General use |
+| `dashboard="detailed"` | Per-stage table and worker performance | Multi-stage pipelines |
+| `dashboard="full"` | Everything + worker states + item tracker | Debugging and deep monitoring |
 
-```python
-from antflow import Pipeline, PipelineDashboard, Stage, StatusTracker
-
-tracker = StatusTracker()
-stage = Stage(name="Process", workers=5, tasks=[my_task])
-pipeline = Pipeline(stages=[stage], status_tracker=tracker)
-
-dashboard = PipelineDashboard(pipeline, tracker)
-
-snapshot = dashboard.get_snapshot()
-print(f"Active workers: {len(dashboard.get_active_workers())}")
-print(f"Items processed: {snapshot.pipeline_stats.items_processed}")
-```
-
-## Worker States
-
-### Querying Worker States
-
-Get the current state of all workers:
-
-```python
-states = pipeline.get_worker_states()
-
-for worker_name, state in states.items():
-    print(f"{worker_name}:")
-    print(f"  Status: {state.status}")  # "idle" or "busy"
-    print(f"  Current item: {state.current_item_id}")
-    print(f"  Processing since: {state.processing_since}")
-```
-
-### Worker State Fields
-
-Each `WorkerState` contains:
-
-- **`worker_name`**: Full worker name (e.g., "Fetch-W0")
-- **`stage`**: Stage name the worker belongs to
-- **`status`**: Either `"idle"` or `"busy"`
-- **`current_item_id`**: ID of item being processed (None if idle)
-- **`processing_since`**: Timestamp when started processing current item
-
-### Example: Finding Busy Workers
-
-```python
-states = pipeline.get_worker_states()
-
-busy_workers = [
-    (name, state.current_item_id)
-    for name, state in states.items()
-    if state.status == "busy"
-]
-
-print(f"Busy workers: {len(busy_workers)}")
-for worker, item_id in busy_workers:
-    print(f"  {worker} processing item {item_id}")
-```
-
-## Worker Metrics
-
-### Querying Performance Metrics
-
-Get performance metrics for all workers:
-
-```python
-metrics = pipeline.get_worker_metrics()
-
-for worker_name, metric in metrics.items():
-    print(f"{worker_name}:")
-    print(f"  Items processed: {metric.items_processed}")
-    print(f"  Items failed: {metric.items_failed}")
-    print(f"  Avg processing time: {metric.avg_processing_time:.3f}s")
-    print(f"  Last active: {metric.last_active}")
-```
-
-### Worker Metrics Fields
-
-Each `WorkerMetrics` contains:
-
-- **`worker_name`**: Full worker name
-- **`stage`**: Stage name
-- **`items_processed`**: Count of successfully processed items
-- **`items_failed`**: Count of failed items
-- **`total_processing_time`**: Total time spent processing (seconds)
-- **`last_active`**: Timestamp of last activity
-- **`avg_processing_time`** (property): Average time per item
-
-### Example: Top Performers
-
-```python
-metrics = pipeline.get_worker_metrics()
-
-top_workers = sorted(
-    metrics.items(),
-    key=lambda x: x[1].items_processed,
-    reverse=True
-)[:5]
-
-print("Top 5 workers:")
-for worker, metric in top_workers:
-    print(f"  {worker}: {metric.items_processed} items, "
-          f"avg {metric.avg_processing_time:.3f}s")
-```
-
-## Dashboard Snapshots
-
-### Getting Complete Snapshot
-
-Get a complete snapshot of the current state:
-
-```python
-snapshot = pipeline.get_dashboard_snapshot()
-
-print(f"Timestamp: {snapshot.timestamp}")
-print(f"Active workers: {sum(1 for s in snapshot.worker_states.values() if s.status == 'busy')}")
-print(f"Total processed: {snapshot.pipeline_stats.items_processed}")
-print(f"Total failed: {snapshot.pipeline_stats.items_failed}")
-print(f"Queue sizes: {snapshot.pipeline_stats.queue_sizes}")
-
-for worker, metrics in snapshot.worker_metrics.items():
-    if metrics.items_processed > 0:
-        print(f"  {worker}: {metrics.items_processed} items")
-```
-
-### Snapshot Fields
-
-A `DashboardSnapshot` contains:
-
-- **`worker_states`**: Dict of all WorkerState objects
-- **`worker_metrics`**: Dict of all WorkerMetrics objects
-- **`pipeline_stats`**: PipelineStats (items processed/failed, queue sizes)
-- **`timestamp`**: When snapshot was taken
-
-## PipelineDashboard Helper
-
-The `PipelineDashboard` class combines queries and events for efficient monitoring.
+> [!NOTE]
+> `dashboard="full"` works best when a `StatusTracker` is provided to track individual item history.
 
 ### Basic Usage
 
 ```python
-from antflow import PipelineDashboard
-
-dashboard = PipelineDashboard(
-    pipeline=pipeline,
-    tracker=tracker,
-    on_update=my_update_callback,  # Optional
-    update_interval=1.0  # Seconds between updates
-)
-
-snapshot = dashboard.get_snapshot()
-active = dashboard.get_active_workers()
-idle = dashboard.get_idle_workers()
-utilization = dashboard.get_worker_utilization()
-```
-
-### Subscribing to Events
-
-Subscribe to status change events:
-
-```python
-async def on_item_failed(event):
-    if event.status == "failed":
-        error = event.metadata.get("error")
-        print(f"Item {event.item_id} failed: {error}")
-
-dashboard.subscribe(on_item_failed)
-
-await pipeline.run(items)
-
-dashboard.unsubscribe(on_item_failed)
-```
-
-### Periodic Updates
-
-Use automatic periodic updates for real-time dashboards:
-
-```python
-async def print_status(snapshot):
-    active = sum(1 for s in snapshot.worker_states.values() if s.status == "busy")
-    print(f"Active: {active}, Processed: {snapshot.pipeline_stats.items_processed}")
-
-dashboard = PipelineDashboard(
-    pipeline,
-    tracker,
-    on_update=print_status,
-    update_interval=2.0
-)
-
-async with dashboard:
-    await pipeline.run(items)
-```
-
-### Worker Utilization
-
-Calculate success rate for each worker:
-
-```python
-utilization = dashboard.get_worker_utilization()
-
-for worker, util in sorted(utilization.items()):
-    print(f"{worker}: {util*100:.1f}% success rate")
-```
-
-## Real-Time Dashboard Example
-
-### WebSocket Dashboard
-
-```python
-from fastapi import FastAPI, WebSocket
-from antflow import Pipeline, PipelineDashboard, Stage, StatusTracker
-
-app = FastAPI()
-
-@app.websocket("/ws/dashboard")
-async def dashboard_endpoint(websocket: WebSocket):
-    await websocket.accept()
-
-    tracker = StatusTracker()
-    pipeline = Pipeline(stages=[stage], status_tracker=tracker)
-    dashboard = PipelineDashboard(pipeline, tracker)
-
-    initial = dashboard.get_snapshot()
-    await websocket.send_json({
-        "type": "init",
-        "workers": {
-            name: {
-                "status": state.status,
-                "current_item": state.current_item_id
-            }
-            for name, state in initial.worker_states.items()
-        },
-        "stats": {
-            "processed": initial.pipeline_stats.items_processed,
-            "failed": initial.pipeline_stats.items_failed,
-            "queues": initial.pipeline_stats.queue_sizes
-        }
-    })
-
-    async def on_event(event):
-        await websocket.send_json({
-            "type": "event",
-            "item_id": event.item_id,
-            "status": event.status,
-            "worker": event.worker,
-            "timestamp": event.timestamp
-        })
-
-    dashboard.subscribe(on_event)
-
-    asyncio.create_task(pipeline.run(items))
-```
-
-### Monitoring Loop
-
-```python
-async def monitor_pipeline(pipeline):
-    while True:
-        await asyncio.sleep(1.0)
-
-        states = pipeline.get_worker_states()
-        metrics = pipeline.get_worker_metrics()
-        stats = pipeline.get_stats()
-
-        busy_count = sum(1 for s in states.values() if s.status == "busy")
-
-        print(f"\rActive: {busy_count}/{len(states)} | "
-              f"Processed: {stats.items_processed} | "
-              f"Failed: {stats.items_failed}",
-              end="", flush=True)
-
-        if stats.items_in_flight == 0 and busy_count == 0:
-            break
-
-asyncio.create_task(monitor_pipeline(pipeline))
-await pipeline.run(items)
-```
-
-## Complete Example
-
-```python
 import asyncio
-from antflow import Pipeline, PipelineDashboard, Stage, StatusTracker
+from antflow import Pipeline
 
-async def process_item(x: int) -> int:
+async def task(x):
     await asyncio.sleep(0.1)
     return x * 2
 
-async def print_updates(snapshot):
-    active = sum(1 for s in snapshot.worker_states.values() if s.status == "busy")
-    print(f"[{snapshot.timestamp:.1f}] Active: {active}, "
-          f"Processed: {snapshot.pipeline_stats.items_processed}")
-
 async def main():
-    tracker = StatusTracker()
+    items = range(100)
+    
+    # 1. Simple progress bar
+    await Pipeline.quick(items, task, workers=10, progress=True)
 
-    stage = Stage(name="Process", workers=5, tasks=[process_item])
-    pipeline = Pipeline(stages=[stage], status_tracker=tracker)
+    # 2. Compact dashboard
+    await Pipeline.quick(items, task, workers=10, dashboard="compact")
 
-    dashboard = PipelineDashboard(
-        pipeline,
-        tracker,
-        on_update=print_updates,
-        update_interval=2.0
+    # 3. Detailed dashboard (Recommended for multi-stage)
+    await (
+        Pipeline.create()
+        .add("Fetch", task, workers=10)
+        .add("Process", task, workers=5)
+        .run(items, dashboard="detailed")
     )
 
-    async with dashboard:
-        print("Starting processing...")
-        results = await pipeline.run(range(50))
-        print(f"\nCompleted! Processed {len(results)} items")
-
-    print("\nFinal metrics:")
-    for worker, metrics in dashboard.get_worker_metrics().items():
-        if metrics.items_processed > 0:
-            print(f"  {worker}: {metrics.items_processed} items, "
-                  f"avg {metrics.avg_processing_time:.3f}s")
-
-    utilization = dashboard.get_worker_utilization()
-    avg_util = sum(utilization.values()) / len(utilization)
-    print(f"\nAverage utilization: {avg_util*100:.1f}%")
-
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-## Best Practices
+---
 
-### For Live Dashboards
+## Event-Driven Monitoring (StatusTracker)
 
-1. **Use PipelineDashboard** for combining queries and events
-2. **Send initial snapshot** when client connects
-3. **Stream incremental updates** via events
-4. **Poll infrequently** (1-2 seconds) for non-critical metrics
-5. **Limit event subscribers** to avoid performance impact
+For logging, alerts, or reacting to specific events in real-time, use `StatusTracker` callbacks.
 
-### For Logging/Monitoring
+```python
+import asyncio
+from antflow import Pipeline, Stage, StatusTracker
 
-1. **Query metrics at end** of pipeline run for summaries
-2. **Use StatusTracker events** for real-time alerts
-3. **Track worker utilization** to identify bottlenecks
-4. **Monitor queue sizes** for backpressure detection
+async def on_status_change(event):
+    if event.status == "failed":
+        print(f"❌ Item {event.item_id} failed at {event.stage}: {event.metadata.get('error')}")
+    elif event.status == "completed" and event.stage == "Save":
+         print(f"✅ Item {event.item_id} fully processed")
 
-### Performance Considerations
+async def main():
+    tracker = StatusTracker(on_status_change=on_status_change)
+    pipeline = Pipeline(
+        stages=[Stage("Process", workers=5, tasks=[lambda x: x*2])],
+        status_tracker=tracker
+    )
+    await pipeline.run(range(10))
 
-- **Queries are cheap**: O(1) dict lookups
-- **Snapshots copy data**: Use sparingly for large worker counts
-- **Events are async**: Won't slow down pipeline
-- **Automatic monitoring**: Minimal overhead (<1% typically)
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+See the [StatusTracker API](../api/tracker.md) for task-level events like `on_task_retry` and `on_task_fail`.
+
+---
+
+## Snapshot API (Custom UIs)
+
+If you are building your own UI (e.g., a web dashboard with FastAPI), you can query the pipeline state at any time using snapshots.
+
+### Getting a Snapshot
+
+```python
+snapshot = pipeline.get_dashboard_snapshot()
+
+print(f"Items processed: {snapshot.pipeline_stats.items_processed}")
+print(f"Items failed: {snapshot.pipeline_stats.items_failed}")
+print(f"Queue sizes: {snapshot.pipeline_stats.queue_sizes}")
+
+# Worker states
+for name, state in snapshot.worker_states.items():
+    print(f"Worker {name} is {state.status}")
+```
+
+### Snapshot Structure
+
+A `DashboardSnapshot` contains:
+- **`worker_states`**: Dict of `WorkerState` (status, current item, duration)
+- **`worker_metrics`**: Dict of `WorkerMetrics` (avg time, processed count, failures)
+- **`pipeline_stats`**: Aggregate statistics and per-stage metrics
+- **`timestamp`**: Snapshot generation time
+
+---
+
+## Advanced: Combining Polling and Events
+
+You can manually poll the pipeline status while it runs in the background.
+
+```python
+import asyncio
+from antflow import Pipeline
+
+async def my_monitor(pipeline):
+    while True:
+        snapshot = pipeline.get_dashboard_snapshot()
+        print(f"Monitoring: {snapshot.pipeline_stats.items_processed} items done")
+        
+        # Stop when pipeline is done (check your own condition)
+        # OR just rely on cancelling this task when main pipeline finishes
+        await asyncio.sleep(1.0)
+
+async def main():
+    pipeline = Pipeline(stages=[...])
+    
+    # Start monitor
+    monitor_task = asyncio.create_task(my_monitor(pipeline))
+    
+    try:
+        await pipeline.run(items)
+    finally:
+        monitor_task.cancel()
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+---
+
+## Custom Dashboards
+
+You can create your own dashboard class by implementing the `DashboardProtocol`. This allows you to pass your own display logic directly into `pipeline.run()`.
+
+```python
+from antflow import DashboardProtocol
+
+class MyLogDashboard:
+    def on_start(self, pipeline, total_items):
+        print(f"Starting {total_items} items")
+
+    def on_update(self, snapshot):
+        print(f"Progress: {snapshot.pipeline_stats.items_processed}")
+
+    def on_finish(self, results, summary):
+        print("Done!")
+
+# Use it
+await pipeline.run(items, custom_dashboard=MyLogDashboard())
+```
+
+For more details, see the [Custom Dashboard Guide](custom-dashboard.md).
+
+---
 
 ## Examples
 
-See the [examples/](examples/) directory for complete dashboard implementations:
+Check the `examples/` directory for full implementations:
 
-- **[rich_polling_dashboard.py](../examples/index.md#dashboards)**: Polling-based terminal dashboard (Recommended)
-- **[rich_callback_dashboard.py](../examples/index.md#dashboards)**: Event-driven terminal dashboard
-- **[dashboard_websocket.py](../examples/index.md#dashboards)**: WebSocket server for web UIs
+- **[dashboard_levels.py](../examples/index.md#dashboards)**: Comparing compact, detailed, and full dashboards
+- **[custom_dashboard.py](../examples/index.md#dashboards)**: Implementing a custom dashboard class
+- **[web_dashboard/](../examples/index.md#dashboards)**: Complete FastAPI + WebSocket dashboard
 
 ## API Reference
 
-See the [API documentation](../api/index.md) for complete details on:
-
-- `Pipeline.get_worker_states()`
-- `Pipeline.get_worker_metrics()`
-- `Pipeline.get_dashboard_snapshot()`
-- `PipelineDashboard`
-- `WorkerState`
-- `WorkerMetrics`
-- `DashboardSnapshot`
+- [Pipeline API](../api/pipeline.md) - `get_dashboard_snapshot()`
+- [Display Module](../api/display.md) - Built-in dashboards and protocols
+- [StatusTracker](../api/tracker.md) - Event-driven monitoring
