@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -61,8 +62,15 @@
             letter-spacing: 0.05em;
         }
 
-        .status-badge.idle { background: var(--bg-tertiary); color: var(--text-secondary); }
-        .status-badge.running { background: var(--accent-green); color: var(--bg-primary); }
+        .status-badge.idle {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .status-badge.running {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
 
         .controls {
             display: flex;
@@ -92,9 +100,18 @@
             transition: opacity 0.2s;
         }
 
-        button:hover { opacity: 0.9; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        button.stop { background: var(--accent-red); }
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        button.stop {
+            background: var(--accent-red);
+        }
 
         .grid {
             display: grid;
@@ -158,10 +175,21 @@
             font-weight: 700;
         }
 
-        .stat-value.green { color: var(--accent-green); }
-        .stat-value.red { color: var(--accent-red); }
-        .stat-value.yellow { color: var(--accent-yellow); }
-        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.green {
+            color: var(--accent-green);
+        }
+
+        .stat-value.red {
+            color: var(--accent-red);
+        }
+
+        .stat-value.yellow {
+            color: var(--accent-yellow);
+        }
+
+        .stat-value.blue {
+            color: var(--accent-blue);
+        }
 
         .stat-label {
             font-size: 0.625rem;
@@ -175,7 +203,8 @@
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             padding: 0.75rem;
             text-align: left;
             border-bottom: 1px solid var(--bg-tertiary);
@@ -189,7 +218,9 @@
             font-weight: 600;
         }
 
-        td { font-size: 0.875rem; }
+        td {
+            font-size: 0.875rem;
+        }
 
         .worker-status {
             display: inline-block;
@@ -199,8 +230,14 @@
             margin-right: 0.5rem;
         }
 
-        .worker-status.busy { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-        .worker-status.idle { background: var(--bg-tertiary); }
+        .worker-status.busy {
+            background: var(--accent-green);
+            box-shadow: 0 0 8px var(--accent-green);
+        }
+
+        .worker-status.idle {
+            background: var(--bg-tertiary);
+        }
 
         .stage-bar {
             display: flex;
@@ -215,10 +252,21 @@
             transition: width 0.3s ease;
         }
 
-        .stage-bar-segment.completed { background: var(--accent-green); }
-        .stage-bar-segment.active { background: var(--accent-yellow); }
-        .stage-bar-segment.pending { background: var(--accent-blue); }
-        .stage-bar-segment.failed { background: var(--accent-red); }
+        .stage-bar-segment.completed {
+            background: var(--accent-green);
+        }
+
+        .stage-bar-segment.active {
+            background: var(--accent-yellow);
+        }
+
+        .stage-bar-segment.pending {
+            background: var(--accent-blue);
+        }
+
+        .stage-bar-segment.failed {
+            background: var(--accent-red);
+        }
 
         .connection-status {
             position: fixed;
@@ -231,10 +279,16 @@
             border: 1px solid var(--bg-tertiary);
         }
 
-        .connection-status.connected { border-color: var(--accent-green); }
-        .connection-status.disconnected { border-color: var(--accent-red); }
+        .connection-status.connected {
+            border-color: var(--accent-green);
+        }
+
+        .connection-status.disconnected {
+            border-color: var(--accent-red);
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
@@ -244,8 +298,7 @@
 
         <div class="controls">
             <input type="number" id="num-items" value="100" min="1" max="10000" placeholder="Items">
-            <button id="start-btn" onclick="startPipeline()">Start Pipeline</button>
-            <button id="stop-btn" class="stop" onclick="stopPipeline()" disabled>Stop</button>
+            <button id="main-btn" onclick="togglePipeline()">Start Pipeline</button>
         </div>
 
         <div class="grid">
@@ -276,6 +329,13 @@
                     </div>
                 </div>
             </div>
+
+            <div class="card">
+                <div class="card-title">Recent Errors</div>
+                <div id="errors-list" style="max-height: 120px; overflow-y: auto; font-size: 0.75rem;">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">No errors</div>
+                </div>
+            </div>
         </div>
 
         <div class="grid">
@@ -293,7 +353,9 @@
                         </tr>
                     </thead>
                     <tbody id="stages-table">
-                        <tr><td colspan="6" style="text-align: center; color: var(--text-secondary);">No data</td></tr>
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-secondary);">No data</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -305,12 +367,15 @@
                         <tr>
                             <th>Worker</th>
                             <th>Stage</th>
+                            <th>Task</th>
                             <th>Status</th>
                             <th>Item</th>
                         </tr>
                     </thead>
                     <tbody id="workers-table">
-                        <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">No data</td></tr>
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-secondary);">No data</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -354,9 +419,15 @@
             badge.className = `status-badge ${isRunning ? 'running' : 'idle'}`;
             badge.textContent = isRunning ? 'Running' : 'Idle';
 
-            // Update buttons
-            document.getElementById('start-btn').disabled = isRunning;
-            document.getElementById('stop-btn').disabled = !isRunning;
+            // Update button
+            const mainBtn = document.getElementById('main-btn');
+            if (isRunning) {
+                mainBtn.textContent = 'Stop Pipeline';
+                mainBtn.className = 'stop';
+            } else {
+                mainBtn.textContent = 'Start Pipeline';
+                mainBtn.className = '';
+            }
 
             // Update progress
             const { processed, failed, in_flight, total } = data.progress;
@@ -408,10 +479,35 @@
                     <tr>
                         <td><span class="worker-status ${w.status}"></span>${w.name}</td>
                         <td>${w.stage}</td>
+                        <td>${w.current_task !== null ? w.current_task : '-'}</td>
                         <td>${w.status}</td>
                         <td>${w.current_item !== null ? w.current_item : '-'}</td>
                     </tr>
                 `).join('');
+            }
+
+            // Update errors list
+            const errorsList = document.getElementById('errors-list');
+            if (data.errors.recent.length > 0) {
+                errorsList.innerHTML = data.errors.recent.map(err => `
+                    <div style="margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--bg-tertiary);">
+                        <div style="display: flex; justify-content: space-between; color: var(--accent-red); font-weight: 600;">
+                            <span>${err.type} @ ${err.stage}</span>
+                            <span>ID: ${err.item_id}</span>
+                        </div>
+                        <div style="color: var(--text-secondary); margin-top: 0.25rem;">${err.error}</div>
+                    </div>
+                `).reverse().join('');
+            } else {
+                errorsList.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 1rem;">No errors</div>';
+            }
+        }
+
+        async function togglePipeline() {
+            if (isRunning) {
+                await stopPipeline();
+            } else {
+                await startPipeline();
             }
         }
 
@@ -436,8 +532,25 @@
             }
         }
 
+        // Fetch initial status to sync button state if page is reloaded
+        async function fetchInitialStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                updateDashboard(data);
+                // Set the input value to the total items if already running
+                if (data.is_running && data.progress.total) {
+                    document.getElementById('num-items').value = data.progress.total;
+                }
+            } catch (error) {
+                console.error('Error fetching initial status:', error);
+            }
+        }
+
         // Initialize
+        fetchInitialStatus();
         connect();
     </script>
 </body>
+
 </html>

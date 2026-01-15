@@ -520,6 +520,7 @@ class Pipeline:
             worker_states=self.get_worker_states(),
             worker_metrics=self.get_worker_metrics(),
             pipeline_stats=self.get_stats(),
+            error_summary=self.get_error_summary(),
             timestamp=time.time(),
         )
 
@@ -930,6 +931,15 @@ class Pipeline:
         self._shutdown = True
         self._stop_event.set()
 
+        # Drain queues to prevent join() from hanging and stop workers from picking up new items
+        for q in self._queues:
+            while not q.empty():
+                try:
+                    q.get_nowait()
+                    q.task_done()
+                except (asyncio.QueueEmpty, ValueError):
+                    break
+
         if self._runner_task:
             # If we want to force cancel, we would cancel the runner task.
             # But graceful shutdown prefers letting them finish current item.
@@ -1038,7 +1048,7 @@ class Pipeline:
             input_q: Input queue
             output_q: Output queue (None for final stage)
         """
-        while not self._stop_event.is_set() or not input_q.empty():
+        while not self._stop_event.is_set() or (not self._shutdown and not input_q.empty()):
             try:
                 # Unpack priority item
                 # (priority, sequence, (payload, attempt))
@@ -1168,6 +1178,7 @@ class Pipeline:
             finally:
                 self._worker_states[name].status = "idle"
                 self._worker_states[name].current_item_id = None
+                self._worker_states[name].current_task = None
                 self._worker_states[name].processing_since = None
                 input_q.task_done()
 
@@ -1197,6 +1208,7 @@ class Pipeline:
 
         for idx, task in enumerate(stage.tasks):
             task_name = task.__name__
+            self._worker_states[worker_name].current_task = task_name
             wrapped = self._wrap_with_tenacity(task, stage, worker_name, item_id, task_name)
 
             logger.debug(
@@ -1260,6 +1272,7 @@ class Pipeline:
         try:
             for idx, task in enumerate(stage.tasks):
                 task_name = task.__name__
+                self._worker_states[worker_name].current_task = task_name
 
                 logger.debug(
                     f"[{worker_name}] START task {idx + 1}/{len(stage.tasks)}="

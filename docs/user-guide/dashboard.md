@@ -105,6 +105,7 @@ A `DashboardSnapshot` contains:
 - **`worker_states`**: Dict of `WorkerState` (status, current item, duration)
 - **`worker_metrics`**: Dict of `WorkerMetrics` (avg time, processed count, failures)
 - **`pipeline_stats`**: Aggregate statistics and per-stage metrics
+- **`error_summary`**: Detailed error statistics and failed item list
 - **`timestamp`**: Snapshot generation time
 
 ---

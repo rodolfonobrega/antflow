@@ -20,7 +20,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
-from antflow import Pipeline, Stage
+from antflow import Pipeline, Stage, StatusTracker
 
 
 pipeline: Optional[Pipeline] = None
@@ -32,7 +32,7 @@ connected_clients: set[WebSocket] = set()
 async def fetch_data(x: int) -> dict:
     """Simulate fetching data from an API."""
     await asyncio.sleep(random.uniform(0.1, 0.3))
-    if random.random() < 0.05:
+    if random.random() < 0.1:
         raise ConnectionError(f"Failed to fetch item {x}")
     return {"id": x, "data": f"fetched_{x}"}
 
@@ -40,7 +40,7 @@ async def fetch_data(x: int) -> dict:
 async def process_data(data: dict) -> dict:
     """Simulate processing data."""
     await asyncio.sleep(random.uniform(0.05, 0.2))
-    if random.random() < 0.03:
+    if random.random() < 0.05:
         raise ValueError(f"Invalid data for item {data['id']}")
     data["processed"] = True
     return data
@@ -85,9 +85,25 @@ async def broadcast_status():
                 "stage": state.stage,
                 "status": state.status,
                 "current_item": state.current_item_id,
+                "current_task": state.current_task,
             }
             for name, state in sorted(snapshot.worker_states.items())
         ],
+        "errors": {
+            "total": snapshot.error_summary.total_failed,
+            "by_type": snapshot.error_summary.errors_by_type,
+            "by_stage": snapshot.error_summary.errors_by_stage,
+            "recent": [
+                {
+                    "item_id": err.item_id,
+                    "error": err.error,
+                    "type": err.error_type,
+                    "stage": err.stage,
+                    "timestamp": err.timestamp,
+                }
+                for err in snapshot.error_summary.failed_items[-10:]
+            ],
+        },
     }
 
     disconnected = set()
@@ -121,8 +137,11 @@ app = FastAPI(title="AntFlow Web Dashboard", lifespan=lifespan)
 @app.get("/", response_class=HTMLResponse)
 async def get_dashboard():
     """Serve the dashboard HTML page."""
-    html_path = Path(__file__).parent / "index.html"
-    return HTMLResponse(content=html_path.read_text())
+    try:
+        html_path = Path(__file__).parent / "index.html"
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+    except Exception as e:
+        return HTMLResponse(content=f"<h1>Error loading dashboard</h1><pre>{str(e)}</pre>", status_code=500)
 
 
 @app.get("/api/status")
@@ -134,6 +153,7 @@ async def get_status():
             "progress": {"processed": 0, "failed": 0, "in_flight": 0, "total": 0},
             "stages": {},
             "workers": [],
+            "errors": {"total": 0, "by_type": {}, "by_stage": {}, "recent": []},
         }
 
     snapshot = pipeline.get_dashboard_snapshot()
@@ -162,9 +182,25 @@ async def get_status():
                 "stage": state.stage,
                 "status": state.status,
                 "current_item": state.current_item_id,
+                "current_task": state.current_task,
             }
             for name, state in sorted(snapshot.worker_states.items())
         ],
+        "errors": {
+            "total": snapshot.error_summary.total_failed,
+            "by_type": snapshot.error_summary.errors_by_type,
+            "by_stage": snapshot.error_summary.errors_by_stage,
+            "recent": [
+                {
+                    "item_id": err.item_id,
+                    "error": err.error,
+                    "type": err.error_type,
+                    "stage": err.stage,
+                    "timestamp": err.timestamp,
+                }
+                for err in snapshot.error_summary.failed_items[-10:]
+            ],
+        },
     }
 
 
@@ -184,7 +220,8 @@ async def start_pipeline(num_items: int = 100):
             Stage("Fetch", workers=5, tasks=[fetch_data], task_attempts=3),
             Stage("Process", workers=3, tasks=[process_data], task_attempts=2),
             Stage("Save", workers=2, tasks=[save_data], task_attempts=2),
-        ]
+        ],
+        status_tracker=StatusTracker(),
     )
 
     async def run_pipeline():
@@ -206,10 +243,12 @@ async def stop_pipeline():
     """Stop pipeline (graceful shutdown)."""
     global is_running
 
-    if not is_running:
+    if not is_running or not pipeline:
         return {"error": "Pipeline not running"}
 
+    await pipeline.shutdown()
     is_running = False
+    await broadcast_status()
     return {"status": "stopping"}
 
 

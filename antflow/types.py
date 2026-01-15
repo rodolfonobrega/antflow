@@ -104,6 +104,7 @@ class WorkerState:
     stage: str
     status: WorkerStatus
     current_item_id: Optional[Any] = None
+    current_task: Optional[str] = None
     processing_since: Optional[float] = None
 
 
@@ -179,6 +180,7 @@ class DashboardSnapshot:
     worker_states: Dict[str, WorkerState]
     worker_metrics: Dict[str, WorkerMetrics]
     pipeline_stats: PipelineStats
+    error_summary: ErrorSummary
     timestamp: float
 
 

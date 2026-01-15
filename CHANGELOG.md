@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-01-15
+
+### Added
+
+*   **Dashboard Task Visibility:** Dashboard now shows the specific task (`current_task`) each worker is executing.
+*   **Integrated Error Monitoring:** `DashboardSnapshot` now natively includes `error_summary` for immediate access to failure details.
+*   **Web Dashboard Enhancements:**
+    *   Added **Recent Errors** panel showing detailed failure logs (ID, stage, type, message).
+    *   Added **Interactive Toggle Button** (Start/Stop) with automatic state synchronization.
+    *   Persistence support: Closing and reopening the tab now resumes monitoring accurately.
+
+### Changed
+
+*   **Hard Stop Support:** `Pipeline.shutdown()` now forcefully stops workers after their current task and drains all queues to ensure immediate cessation of processing.
+*   **Worker State:** `WorkerState` now includes a `current_task` field for better visibility into long-running stages with multiple tasks.
+
+### Fixed
+
+*   **Worker Idle Status on Shutdown:** Fixed an issue where workers remained in "busy" state on the UI after a manual stop.
+
 ## [0.6.1] - 2026-01-05
 
 ### Removed

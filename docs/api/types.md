@@ -44,6 +44,16 @@ Represents the type of event occurring at the task level.
 | `retry` | A task failed and is being retried. |
 | `fail` | A task failed permanently (after exhausting retries). |
 
+### WorkerState
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | `WorkerStatus` | `idle` or `busy`. |
+| `current_item_id` | `Optional[Any]` | ID of the item currently being processed. |
+| `current_task` | `Optional[str]` | Name of the task function currently being executed. |
+| `processing_since` | `Optional[float]` | Timestamp when the current item started. |
+| `stage` | `str` | Name of the stage the worker belongs to. |
+
 ## Data Classes
 
 ::: antflow.types
