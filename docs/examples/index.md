@@ -18,8 +18,10 @@ This directory contains a comprehensive list of example scripts available in the
 | **[advanced_pipeline.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/advanced_pipeline.py)** | Complex pipeline with multiple stages, retries, and error handling. |
 | **[real_world_example.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/real_world_example.py)** | A realistic ETL scenario simulating data ingestion, processing, and storage. |
 | **[streaming_results.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/streaming_results.py)** | Processing results as they complete using the `stream()` method. |
+| **[priority_demo.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/priority_demo.py)** | Handling task priorities (Low/High) in the pipeline queue. |
+| **[task_limits_openai.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/task_limits_openai.py)** | **New**: Managing strict API rate limits using `task_concurrency_limits`. |
+| **[backpressure_demo.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/backpressure_demo.py)** | **New**: Demonstrating automatic backpressure and queue capacity limits. |
 | **[resume_checkpoint.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/resume_checkpoint.py)** | Manual checkpointing and resuming pipeline execution from a specific point. |
-| **[backpressure_demo.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/backpressure_demo.py)** | Smart backpressure propagation between stages with bounded queues. |
 
 ## Monitoring & Tracking
 

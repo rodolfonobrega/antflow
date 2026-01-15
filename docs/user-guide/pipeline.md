@@ -518,7 +518,207 @@ results = await pipeline.run(items)
 # Results maintain input order
 ```
 
+## Internal Task Status Updates
 
+When you have long-running tasks with multiple internal steps (like polling an external API), you can use `set_task_status()` to update the dashboard in real-time without waiting for the entire task to complete.
+
+### The Problem
+
+Consider this scenario:
+
+```python
+async def process_openai_batch(file_path: str):
+    # Upload file (takes 2 seconds)
+    file_id = await upload_to_openai(file_path)
+    
+    # Poll for status (takes 5 minutes!)
+    while True:
+        status = await check_batch_status(file_id)
+        if status == "completed":
+            break
+        await asyncio.sleep(10)  # Poll every 10 seconds
+    
+    # Download results (takes 3 seconds)
+    return await download_results(file_id)
+```
+
+**The issue:** The dashboard only shows `current_task = "process_openai_batch"` for the entire 5+ minutes. You can't see whether it's uploading, polling, or downloading.
+
+### The Solution: `set_task_status()`
+
+Use `set_task_status()` to update the dashboard status from within your task:
+
+```python
+from antflow import set_task_status
+
+async def process_openai_batch(file_path: str):
+    # Step 1: Upload
+    set_task_status("⬆️  Uploading file...")
+    file_id = await upload_to_openai(file_path)
+    
+    # Step 2: Poll with live status
+    set_task_status("⏳ Polling: preparing...")
+    while True:
+        status = await check_batch_status(file_id)
+        set_task_status(f"⏳ Polling: {status}...")
+        
+        if status == "completed":
+            break
+        await asyncio.sleep(10)
+    
+    # Step 3: Download
+    set_task_status("⬇️  Downloading results...")
+    return await download_results(file_id)
+```
+
+Now the dashboard's "Current Task" column will show:
+- `⬆️  Uploading file...` (for 2 seconds)
+- `⏳ Polling: preparing...` (for ~1 minute)
+- `⏳ Polling: processing...` (for ~3 minutes)
+- `⏳ Polling: finalizing...` (for ~1 minute)
+- `⬇️  Downloading results...` (for 3 seconds)
+
+### How It Works
+
+1. **Context Variable**: `set_task_status()` uses Python's `contextvars` to update the current worker's state
+2. **Dashboard Polling**: The dashboard polls `pipeline.get_dashboard_snapshot()` every 100ms
+3. **Real-time Updates**: Status changes appear in the dashboard within 100ms
+
+### Example: Using with Pipeline.create()
+
+```python
+from antflow import Pipeline, set_task_status
+
+async def process_file(filename: str):
+    set_task_status("🔍 Validating...")
+    await asyncio.sleep(1)
+    
+    set_task_status("📖 Reading...")
+    await asyncio.sleep(1)
+    
+    set_task_status("⚙️  Processing...")
+    await asyncio.sleep(2)
+    
+    set_task_status("💾 Saving...")
+    await asyncio.sleep(1)
+    
+    return {"file": filename, "status": "done"}
+
+# Run with detailed dashboard to see the "Current Task" column
+pipeline = Pipeline.create().add("Process", process_file, workers=3).build()
+results = await pipeline.run(files, dashboard="detailed")
+```
+
+### Example: Using with Stage
+
+```python
+from antflow import Pipeline, Stage, set_task_status
+
+async def upload_batch(file_path: str):
+    set_task_status("📦 Preparing batch...")
+    await asyncio.sleep(0.5)
+    
+    set_task_status("⬆️  Uploading to API...")
+    await asyncio.sleep(1)
+    
+    return f"batch-{file_path}"
+
+async def poll_batch(batch_id: str):
+    statuses = ["validating", "processing", "finalizing", "completed"]
+    
+    for status in statuses:
+        set_task_status(f"⏳ Status: {status}...")
+        await asyncio.sleep(2)
+    
+    return {"batch_id": batch_id, "status": "completed"}
+
+# Multi-stage pipeline with status updates in each stage
+stages = [
+    Stage(name="Upload", workers=5, tasks=[upload_batch]),
+    Stage(name="Poll", workers=10, tasks=[poll_batch])
+]
+
+pipeline = Pipeline(stages=stages)
+results = await pipeline.run(files, dashboard="detailed")
+```
+
+### Best Practices
+
+1. **Use Emojis**: Visual indicators make status easier to scan (📦 🔍 ⬆️ ⬇️ ⚙️ ✅ ❌)
+2. **Be Specific**: Include progress info when possible (`Processing 35/100...`)
+3. **Update Frequently**: For long operations, update every few seconds
+4. **Keep It Short**: Dashboard space is limited (max ~40 characters)
+5. **Use with `dashboard="detailed"`**: The "Current Task" column is most visible in detailed mode
+
+### Rate Limiting Updates
+
+For tight loops or very frequent updates, you can use the `min_interval` parameter to avoid excessive updates:
+
+```python
+# Option 1: Rate limiting (max 2 updates per second)
+for i in range(1000):
+    set_task_status(f"Processing {i}/1000...", min_interval=0.5)
+    await process_item(i)
+
+# Option 2: Update every N iterations (more efficient)
+for i in range(1000):
+    if i % 50 == 0:  # Update every 50 items
+        set_task_status(f"Processing {i}/1000...")
+    await process_item(i)
+
+# Option 3: Polling with rate limiting
+while True:
+    status = await check_api_status()
+    # Update max once per second, even if polling every 100ms
+    set_task_status(f"Status: {status}", min_interval=1.0)
+    
+    if status == "completed":
+        break
+    await asyncio.sleep(0.1)
+```
+
+**When to use rate limiting:**
+- **Tight loops**: Processing thousands of items very quickly
+- **Fast polling**: Checking status more frequently than you need to update the UI
+- **High-frequency events**: Any scenario with >10 updates per second
+
+**When NOT needed:**
+- **Normal tasks**: Most tasks update naturally every few seconds
+- **Polling at reasonable intervals**: If you poll every 5-10 seconds, no rate limiting needed
+- **Dashboard already limits**: The dashboard polls every 100ms, so it naturally rate-limits to ~10 updates/second
+
+### Complete Example
+
+See `examples/task_status_complete.py` for a comprehensive example demonstrating:
+- **Basic Usage**: Simple status updates through multiple steps
+- **Real-World Polling**: OpenAI batch processing with multiple API calls
+- **Rate Limiting**: Different strategies for controlling update frequency
+- **Custom Dashboard**: Full control over status display
+
+This single file contains all examples in well-organized sections.
+
+### Limitations
+
+- **Dashboard Only**: `set_task_status()` only affects the visual dashboard, not `StatusTracker` events
+- **Worker-Scoped**: Only updates the current worker's status (not global)
+- **No History**: Previous status messages are not stored (only current status is visible)
+
+### Using with Custom Dashboards
+
+The built-in dashboards (`dashboard="detailed"`) show the "Current Task" column automatically. If you create a **custom dashboard**, you have full access to `WorkerState.current_task`:
+
+```python
+class MyCustomDashboard:
+    def on_update(self, snapshot: DashboardSnapshot):
+        for worker_name, state in snapshot.worker_states.items():
+            # Access the status set by set_task_status()
+            current_status = state.current_task
+            
+            print(f"{worker_name}: {current_status}")
+            # Example output: "Process-W0: ⏳ Polling: processing..."
+```
+
+See the "Custom Dashboard" section in `examples/task_status_complete.py` for a complete implementation with a rich table display.
 
 ## Monitoring Strategies
 

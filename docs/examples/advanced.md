@@ -291,7 +291,7 @@ async def main():
         print(f"\n✅ Successfully processed {len(results)} users")
         print("\nSample output (first 3 users):")
         for result in results[:3]:
-            data = result['value']
+            data = result.value
             print(f"\n  User ID: {data['id']}")
             print(f"  Name: {data['full_name']}")
             print(f"  Email: {data['email_address']}")
@@ -309,6 +309,45 @@ if __name__ == "__main__":
 - Different retry strategies per stage
 - Comprehensive error handling and monitoring
 - Statistics and reporting
+
+## Task-Level Concurrency Limits (Rate Limiting)
+
+You can limit the number of concurrent executions for specific tasks within a stage. This is crucial for rate-limited APIs or database connections.
+
+```python
+import asyncio
+from antflow import Pipeline, Stage
+
+async def upload(item):
+    """Simulate a rate-limited API upload."""
+    await asyncio.sleep(0.5)
+    return item
+
+async def poll(item):
+    """Simulate long-running polling (not rate-limited)."""
+    await asyncio.sleep(2.0)
+    return f"Done_{item}"
+
+async def main():
+    # Define a stage with 50 workers, but limit 'upload' to 2 concurrent calls
+    stage = Stage(
+        name="API_Stage",
+        workers=50,
+        tasks=[upload, poll],
+        task_concurrency_limits={
+            "upload": 2  # Strict limit for this specific task
+        }
+    )
+
+    pipeline = Pipeline(stages=[stage])
+    results = await pipeline.run(range(20), progress=True)
+    print(f"Processed {len(results)} items")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+**Key Insight:** This ensures that while up to 50 items are being monitored (polling), only 2 are ever being uploaded at the same time.
 
 ## Monitoring Pipeline Execution
 

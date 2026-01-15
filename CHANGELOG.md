@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-01-15
+
+### Added
+
+*   **Internal Task Status Updates:** New `set_task_status()` function for real-time status updates within long-running tasks:
+    *   Updates dashboard in real-time without waiting for task completion
+    *   Perfect for polling scenarios (e.g., OpenAI batch processing)
+    *   Optional `min_interval` parameter for rate limiting updates
+    *   Accessible via `WorkerState.current_task` in custom dashboards
+*   **New Example:** `examples/task_status_complete.py` - Comprehensive example demonstrating:
+    *   Basic status updates
+    *   Real-world polling with multiple API calls
+    *   Rate limiting strategies
+    *   Custom dashboard integration
+
+### Changed
+
+*   **Context Module:** Added `antflow.context` module with `worker_state_var` for thread-safe worker state access
+*   **Documentation:** Enhanced `docs/user-guide/pipeline.md` with "Internal Task Status Updates" section including:
+    *   Problem/solution explanation
+    *   Usage examples with both `Pipeline.create()` and `Stage`
+    *   Rate limiting best practices
+    *   Custom dashboard integration guide
+
 ## [0.7.0] - 2026-01-15
 
 ### Added

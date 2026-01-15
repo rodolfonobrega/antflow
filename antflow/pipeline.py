@@ -43,6 +43,7 @@ from .types import (
     WorkerMetrics,
     WorkerState,
 )
+from .context import worker_state_var
 from .utils import extract_exception, setup_logger
 
 logger = setup_logger(__name__)
@@ -1064,6 +1065,9 @@ class Pipeline:
             self._worker_states[name].current_item_id = item_id
             self._worker_states[name].processing_since = start_time
 
+            # Set context variable for task status updates
+            token = worker_state_var.set(self._worker_states[name])
+
             try:
                 logger.debug(f"[{name}] START stage={stage.name} id={item_id} attempt={attempt} prio={priority}")
 
@@ -1176,6 +1180,7 @@ class Pipeline:
                     except Exception as e:
                         logger.error(f"[{name}] Error in on_failure callback: {e}")
             finally:
+                worker_state_var.reset(token)
                 self._worker_states[name].status = "idle"
                 self._worker_states[name].current_item_id = None
                 self._worker_states[name].current_task = None

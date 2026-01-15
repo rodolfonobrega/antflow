@@ -226,7 +226,7 @@ async def main():
 
     print(f"Processed {len(results)} items")
     for result in results[:5]:
-        print(f"  ID {result['id']}: {result['value']}")
+        print(f"  ID {result.id}: {result.value}")
 
 asyncio.run(main())
 ```
@@ -296,10 +296,29 @@ asyncio.run(main())
 
 **Output:**
 ```
-Items processed: 200
+Items processed: 100
 Items failed: 0
 Items in-flight: 0
 Queue sizes: {'Extract': 0, 'Transform': 0}
+
+---
+
+### Automatic Backpressure & Flow Control
+
+AntFlow automatically prevents memory exhaustion by limiting stage queues.
+
+*   **Default Behavior**: Each stage has an input queue limited to `max(1, workers * 10)`.
+*   **Backpressure**: If a stage is slow, its input queue fills up, causing the **previous stage** (or the feeding process) to block until space is available.
+*   **Custom Limits**: You can explicitly set the limit using `queue_capacity`:
+
+```python
+stage = Stage(
+    "SlowConsumer", 
+    workers=1, 
+    tasks=[slow_task], 
+    queue_capacity=5 # Only allow 5 items to wait in line
+)
+```
 ```
 
 ## Complete Basic Example
@@ -339,7 +358,7 @@ async def main():
 
     print(f"Pipeline results:")
     for r in results:
-        print(f"  {r['id']}: {r['value']}")
+        print(f"  {r.id}: {r.value}")
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -28,6 +28,7 @@ from .types import (
     WorkerState,
     WorkerStatus,
 )
+from .context import set_task_status
 
 __all__ = [
     "__version__",
@@ -57,4 +58,5 @@ __all__ = [
     "WorkerMetrics",
     "WorkerState",
     "WorkerStatus",
+    "set_task_status",
 ]
