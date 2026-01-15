@@ -109,11 +109,15 @@ for name, state in snapshot.worker_states.items():
 ### Snapshot Structure
 
 A `DashboardSnapshot` contains:
-- **`worker_states`**: Dict of `WorkerState` (status, current item, duration)
+- **`worker_states`**: Dict of `WorkerState` (status, current item, current task, duration)
+  - Includes `current_task` field updated by `set_task_status()` for internal task progress
+  - **Note:** `current_task` is only visible via polling (snapshots), NOT via `StatusTracker` callbacks
 - **`worker_metrics`**: Dict of `WorkerMetrics` (avg time, processed count, failures)
 - **`pipeline_stats`**: Aggregate statistics and per-stage metrics
 - **`error_summary`**: Detailed error statistics and failed item list
 - **`timestamp`**: Snapshot generation time
+
+> **💡 TIP:** For internal task progress (e.g., "Uploading...", "Polling..."), use `set_task_status()` inside your tasks. This updates `WorkerState.current_task` which is visible in snapshots. See [Internal Task Status Updates](pipeline.md#internal-task-status-updates) for details.
 
 ---
 

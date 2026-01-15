@@ -580,9 +580,12 @@ Now the dashboard's "Current Task" column will show:
 
 ### How It Works
 
+> **⚠️ IMPORTANT:** `set_task_status()` requires **polling-based dashboards** to work. It does NOT trigger `StatusTracker` callbacks. See [Limitations](#limitations) for details.
+
 1. **Context Variable**: `set_task_status()` uses Python's `contextvars` to update the current worker's state
-2. **Dashboard Polling**: The dashboard polls `pipeline.get_dashboard_snapshot()` every 100ms
-3. **Real-time Updates**: Status changes appear in the dashboard within 100ms
+2. **Dashboard Polling**: The dashboard polls `pipeline.get_dashboard_snapshot()` every 0.5s (default, configurable)
+3. **Real-time Updates**: Status changes appear in the dashboard on the next poll cycle
+4. **No Events**: This does NOT emit events - callbacks like `on_status_change` will never see these updates
 
 ### Example: Using with Pipeline.create()
 
@@ -699,7 +702,78 @@ This single file contains all examples in well-organized sections.
 
 ### Limitations
 
-- **Dashboard Only**: `set_task_status()` only affects the visual dashboard, not `StatusTracker` events
+**IMPORTANT: `set_task_status()` only works with POLLING, not CALLBACKS**
+
+- **✅ Works with Polling (`on_update`)**: 
+  - `set_task_status()` updates `WorkerState.current_task`
+  - Dashboards using `on_update` will see these changes on the next poll (default: every 0.5s)
+  - Built-in dashboards (`dashboard="detailed"`) use polling and show updates automatically
+  
+- **❌ Does NOT work with Callbacks (`on_status_change`)**:
+  - `set_task_status()` does NOT emit any events
+  - `StatusTracker` callbacks (`on_status_change`, `on_task_start`, etc.) will NEVER be called
+  - This is by design to avoid flooding the event system with hundreds of internal status updates
+  
+- **Why this design?**
+  - Polling reads state when needed (efficient for UI updates)
+  - Callbacks fire immediately on events (efficient for alerts/logging)
+  - Internal task status is "state", not "events" - it changes frequently and is best read via polling
+  
+**Example - What Works and What Doesn't:**
+
+```python
+from antflow import Pipeline, StatusTracker, set_task_status
+
+async def my_task(item):
+    set_task_status("Step 1")  # ← Updates internal state
+    await asyncio.sleep(1)
+    set_task_status("Step 2")  # ← Updates internal state
+    return item
+
+# ✅ WORKS: Polling dashboard sees the updates
+class PollingDashboard:
+    def on_update(self, snapshot):
+        for name, state in snapshot.worker_states.items():
+            print(f"{name}: {state.current_task}")
+            # Output: "Process-W0: Step 1"
+            #         "Process-W0: Step 2"
+
+await pipeline.run(items, custom_dashboard=PollingDashboard())
+
+# ❌ DOESN'T WORK: Callbacks never see internal status
+async def on_change(event):
+    print(f"Event: {event.status}")
+    # Only prints: "queued", "in_progress", "completed"
+    # NEVER sees "Step 1" or "Step 2"
+
+tracker = StatusTracker(on_status_change=on_change)
+pipeline = Pipeline(stages=[...], status_tracker=tracker)
+await pipeline.run(items)  # Callbacks won't see set_task_status() calls
+```
+
+**Best Practice - Use Both Together:**
+
+```python
+# Use callbacks for critical events (immediate alerts)
+async def on_failure(event):
+    if event.status == "failed":
+        await send_alert(f"CRITICAL: Item {event.item_id} failed!")
+
+# Use polling for detailed progress (visual dashboard)
+class DetailedDashboard:
+    def on_update(self, snapshot):
+        for name, state in snapshot.worker_states.items():
+            if state.current_task:
+                print(f"{name}: {state.current_task}")
+
+# Combine both
+tracker = StatusTracker(on_status_change=on_failure)
+pipeline = Pipeline(stages=[...], status_tracker=tracker)
+await pipeline.run(items, custom_dashboard=DetailedDashboard())
+```
+
+**Other Limitations:**
+
 - **Worker-Scoped**: Only updates the current worker's status (not global)
 - **No History**: Previous status messages are not stored (only current status is visible)
 
