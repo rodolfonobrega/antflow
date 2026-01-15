@@ -149,24 +149,26 @@ if __name__ == "__main__":
 
 Previously, users were forced to use a single stage with task limits to avoid the "firehose" effect. With the introduction of **Automatic Backpressure**, both approaches are now viable.
 
-### Option A: Two Stages (Best for Organization) 📂
+### Option A: Two Stages (Visual Separation Only) ⚠️
 
 ```python
-# 📂 Best for code organization, but has a small buffer
+# ⚠️ WARNING: Contains unmonitored buffer items
 stage_upload = Stage("Upload", workers=2, tasks=[upload])
 stage_poll = Stage("Polling", workers=50, tasks=[poll], queue_capacity=1)
 ```
 
-*   **Structure**: `UploadStage (2 workers)` -> `PollingStage (50 workers)`.
-*   **The Nuance**: `queue_capacity` is an **additional buffer**. 
-*   **The Math**: With 50 workers and `queue_capacity=1`, you can have **51 items** in flight (50 being monitored + 1 waiting in the queue).
-*   **The Risk**: That 1 item in the queue has already been uploaded, so it is **active but unmonitored**. If you need a strict limit of exactly 50, you would need to set `workers=49` and `capacity=1`, or use Option B.
-*   **Result**: Great for decoupling logic, but requires careful math if your external limits are extremely tight.
+*   **Structure**: `UploadStage` -> `PollingStage`.
+*   **The Flaw**: Every stage needs an input queue. Even with `queue_capacity=1`, you have a buffer.
+*   **The Math**: 50 workers + 1 queue slot = **51 active jobs**. 
+*   **The Risk**: One job has already been uploaded by Stage A, but it is sitting in Stage B's queue waiting for a worker. **This job is active on OpenAI but is NOT being monitored.**
+*   **Verdict**: ❌ **Not recommended for strict limits.** While it looks cleaner in code, it is technically less precise.
 
-### Option B: Single Stage + Task Limits (Perfect for Strict Limits) 🏆
+### Option B: Single Stage + Task Limits (The Correct Way) 🏆
+
+This is the recommended approach for absolute precision.
 
 ```python
-# 🏆 Best for strict limits: No unmonitored items
+# 🏆 BEST PRACTICE: Zero unmonitored items
 stage = Stage(
     "Combined", 
     workers=50, 
@@ -175,11 +177,11 @@ stage = Stage(
 )
 ```
 
-*   **Structure**: One Stage (Exactly 50 workers total).
-*   **Behavior**: A worker only picks up a new item from the input queue when it is completely free.
-*   **Total "Active" Jobs**: Strictly capped at **50**.
-*   **The Benefit**: There is **zero buffer** between upload and poll because they happen sequentially within the same worker. As soon as a job is uploaded, that same worker immediately starts polling it.
-*   **Result**: This is the most precise way to respect a hard limit (like "Exactly 50 jobs") because you never have uploaded items waiting in an internal queue.
+*   **Structure**: One Stage (Exactly 50 workers).
+*   **The Logic**: A worker only fetches a new item when it is 100% free. 
+*   **The Math**: Total items in flight = **Exactly 50**.
+*   **The Benefit**: There is **zero internal queue** between the upload and the poll. As soon as the upload finishes, the same worker immediately starts polling. No item ever sits idle and unmonitored.
+*   **Verdict**: ✅ **Recommended for Production.** This ensures 100% compliance with external API limits.
 
 ---
 
