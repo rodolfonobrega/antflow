@@ -39,6 +39,29 @@ async with AsyncExecutor(max_workers=3) as executor:
     print(result)  # 84
 ```
 
+#### Throttling with Semaphores
+
+A unique feature of `AsyncExecutor.submit()` is the optional `semaphore` parameter. This allows you to share a specific concurrency limit across multiple tasks, independent of the total `max_workers`.
+
+**Use Case:** You have 100 workers for general processing, but a specific API call used in your tasks is limited to 5 concurrent requests.
+
+```python
+import asyncio
+from antflow import AsyncExecutor
+
+# 1. Create a shared semaphore
+api_limit = asyncio.Semaphore(5)
+
+async with AsyncExecutor(max_workers=100) as executor:
+    # 2. These tasks share the same 'api_limit' semaphore
+    # They will never exceed 5 concurrent executions
+    futures = [
+        executor.submit(process_api, i, semaphore=api_limit) 
+        for i in range(50)
+    ]
+    results = await asyncio.gather(*[f.result() for f in futures])
+```
+
 ### Mapping Over Iterables
 
 The `map()` method applies an async function to multiple inputs and returns a list:
@@ -287,11 +310,6 @@ async with AsyncExecutor(max_workers=5) as executor:
     )
 ```
 
----
-
-> **Tip:** For advanced scenarios where you need to limit specific tasks within a large worker pool (e.g., rate-limiting a specific API call while keeping others fast), see the [Concurrency Control Guide](concurrency.md).
-
----
 
 ## AsyncFuture
 
