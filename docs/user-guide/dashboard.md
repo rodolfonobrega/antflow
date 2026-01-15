@@ -77,6 +77,13 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+> [!TIP]
+> **Complete Working Example:** See [`examples/monitoring_status_tracker.py`](https://github.com/rodolfonobrega/antflow/blob/main/examples/monitoring_status_tracker.py) for a comprehensive demonstration of:
+> - Item-level callbacks (`on_status_change`)
+> - Task-level callbacks (`on_task_start`, `on_task_complete`, `on_task_retry`, `on_task_fail`)
+> - Real-time monitoring with polling
+> - Querying item status and history
+
 See the [StatusTracker API](../api/tracker.md) for task-level events like `on_task_retry` and `on_task_fail`.
 
 ---

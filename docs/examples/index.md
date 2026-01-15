@@ -27,7 +27,7 @@ This directory contains a comprehensive list of example scripts available in the
 
 | Example | Description |
 |---------|-------------|
-| **[monitoring_status_tracker.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/monitoring_status_tracker.py)** | Basic usage of `StatusTracker` to monitor item progress via events. |
+| **[monitoring_status_tracker.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/monitoring_status_tracker.py)** | **Callbacks & Event-Driven Monitoring** - Complete example using `StatusTracker` with `on_status_change` and task-level callbacks (`on_task_start`, `on_task_complete`, `on_task_retry`, `on_task_fail`). |
 | **[monitoring_workers.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/monitoring_workers.py)** | Monitoring the state and activity of individual workers. |
 
 ## Dashboards
@@ -35,7 +35,8 @@ This directory contains a comprehensive list of example scripts available in the
 | Example | Description |
 |---------|-------------|
 | **[dashboard_levels.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/dashboard_levels.py)** | **Recommended**: Comparing `compact`, `detailed`, and `full` built-in dashboards. |
-| **[custom_dashboard.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/custom_dashboard.py)** | Implementing a custom dashboard class using `DashboardProtocol`. |
+| **[custom_dashboard.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/custom_dashboard.py)** | Implementing custom dashboards using `DashboardProtocol` (polling-based). |
+| **[custom_dashboard_callbacks.py](https://github.com/rodolfonobrega/antflow/blob/main/examples/custom_dashboard_callbacks.py)** | **NEW**: Implementing custom dashboards using `StatusTracker` callbacks (event-driven alternative). |
 | **[web_dashboard/](https://github.com/rodolfonobrega/antflow/blob/main/examples/web_dashboard/)** | Complete FastAPI + WebSocket dashboard for web browsers. |
 
 ## Detailed Guides

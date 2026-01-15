@@ -737,6 +737,7 @@ class Pipeline:
         progress: bool = False,
         dashboard: Optional[Literal["compact", "detailed", "full"]] = None,
         custom_dashboard: Optional[DashboardProtocol] = None,
+        dashboard_update_interval: float = 0.5,
     ) -> List[PipelineResult]:
         """
         Run the pipeline end-to-end with the given items.
@@ -748,6 +749,10 @@ class Pipeline:
             progress: Show minimal progress bar (mutually exclusive with dashboard).
             dashboard: Built-in dashboard type: "compact", "detailed", or "full".
             custom_dashboard: User-provided dashboard implementing DashboardProtocol.
+            dashboard_update_interval: How often to update the dashboard in seconds (default: 0.5).
+                Only applies to DashboardProtocol-based displays (progress, dashboard, custom_dashboard).
+                Lower values = more frequent updates but higher CPU usage.
+                Recommended range: 0.1 to 1.0 seconds.
 
         Returns:
             List of [PipelineResult][antflow.types.PipelineResult] objects.
@@ -757,12 +762,22 @@ class Pipeline:
             # Simple progress bar
             results = await pipeline.run(items, progress=True)
 
-            # Compact dashboard
-            results = await pipeline.run(items, dashboard="compact")
+            # Compact dashboard with faster updates
+            results = await pipeline.run(items, dashboard="compact", dashboard_update_interval=0.2)
 
-            # Custom dashboard
-            results = await pipeline.run(items, custom_dashboard=MyDashboard())
+            # Custom dashboard with slower updates (lower CPU usage)
+            results = await pipeline.run(items, custom_dashboard=MyDashboard(), dashboard_update_interval=1.0)
             ```
+
+        Note:
+            The dashboard update mechanism uses polling: a background task calls
+            `display.on_update(snapshot)` every `dashboard_update_interval` seconds.
+            This is efficient because:
+            - Snapshots are lightweight (just reading current state)
+            - No events are generated - we only read existing data
+            - The interval is configurable to balance responsiveness vs CPU usage
+
+            For event-driven monitoring without polling, use `StatusTracker` callbacks instead.
         """
         display = self._create_display(progress, dashboard, custom_dashboard)
 
@@ -774,7 +789,7 @@ class Pipeline:
 
         if display:
             monitor_task = asyncio.create_task(
-                self._monitor_progress(display, len(items))
+                self._monitor_progress(display, len(items), dashboard_update_interval)
             )
             await self.join()
             monitor_task.cancel()
@@ -828,9 +843,37 @@ class Pipeline:
         self,
         display: Any,
         total_items: int,
-        update_interval: float = 0.1,
+        update_interval: float = 0.5,
     ) -> None:
-        """Background task that updates the display periodically."""
+        """
+        Background task that updates the display periodically.
+        
+        This method implements the polling mechanism for DashboardProtocol-based displays.
+        It runs in a separate asyncio task and continuously:
+        1. Calls get_dashboard_snapshot() to get current pipeline state
+        2. Calls display.on_update(snapshot) to update the UI
+        3. Sleeps for update_interval seconds
+        4. Repeats until cancelled
+        
+        Args:
+            display: Dashboard object implementing DashboardProtocol
+            total_items: Total number of items being processed
+            update_interval: Seconds between updates (default: 0.5)
+        
+        Performance Notes:
+            - get_dashboard_snapshot() is lightweight - just reads current state
+            - No events are generated - we only read existing counters/states
+            - The loop continues until the task is cancelled (when pipeline finishes)
+            - Lower intervals = more responsive UI but higher CPU usage
+            - Higher intervals = lower CPU usage but less responsive UI
+        
+        Efficiency:
+            This polling approach is efficient because:
+            - Snapshots don't create new objects, just read existing state
+            - The interval is configurable (0.1-1.0s recommended)
+            - The task is cancelled immediately when pipeline finishes
+            - No "empty events" - we always have current state to display
+        """
         while True:
             snapshot = self.get_dashboard_snapshot()
             display.on_update(snapshot)

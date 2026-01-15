@@ -5,6 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] - 2026-01-15
+
+### Added
+
+*   **Configurable Dashboard Update Interval:** New `dashboard_update_interval` parameter in `Pipeline.run()`:
+    *   Control how often dashboards update (default: 0.5s, changed from 0.1s)
+    *   Recommended range: 0.1s to 1.0s
+    *   Lower values = more responsive UI but higher CPU usage
+    *   Higher values = lower CPU usage but less responsive UI
+*   **Event-Driven Dashboard Example:** New `examples/custom_dashboard_callbacks.py` demonstrating:
+    *   How to build custom dashboards using `StatusTracker` callbacks instead of polling
+    *   Four practical examples: Simple, JSON stream, Multi-stage, and Task-level monitoring
+    *   Direct comparison between polling and callback approaches
+    *   Shows task-level monitoring (impossible with polling)
+
+### Changed
+
+*   **Dashboard Update Default:** Changed default update interval from 0.1s to 0.5s (2 updates/sec instead of 10)
+    *   More efficient default for production use
+    *   Reduces CPU overhead while maintaining good responsiveness
+    *   Users can still configure faster updates via `dashboard_update_interval` parameter
+*   **Enhanced Documentation:**
+    *   Added comprehensive "How Polling Works" section in `docs/user-guide/custom-dashboard.md`
+    *   Detailed explanation of `_monitor_progress` internal mechanism
+    *   Clear guidance on when to use polling vs callbacks
+    *   Performance notes and efficiency explanations
+    *   Added prominent references to practical examples in documentation
+*   **Improved `_monitor_progress` Documentation:** Added detailed docstring explaining:
+    *   How the polling mechanism works
+    *   Performance characteristics
+    *   Efficiency considerations
+    *   No "empty events" - only reads existing state
+
+### Documentation
+
+*   **Better Example Discovery:** Updated `docs/examples/index.md` with clearer descriptions:
+    *   Explicitly marked `monitoring_status_tracker.py` as "Callbacks & Event-Driven Monitoring"
+    *   Added `custom_dashboard_callbacks.py` to dashboards section
+    *   Improved descriptions to make it easier to find callback examples
+*   **Added TIP Boxes:** Prominent callouts in documentation pointing to practical examples:
+    *   `custom-dashboard.md` now has clear references to both polling and callback examples
+    *   `dashboard.md` includes link to comprehensive callback example
+
 ## [0.7.1] - 2026-01-15
 
 ### Added

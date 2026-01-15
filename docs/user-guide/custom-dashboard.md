@@ -30,6 +30,69 @@ For custom visualization needs, you can implement your own dashboard.
 - **DashboardProtocol**: Best for rendering UIs that need complete state snapshots
 - **StatusTracker callbacks**: Best for logging, event streaming, or reacting to specific events
 
+> [!TIP]
+> **See Complete Examples:**
+> - **Polling:** [`examples/custom_dashboard.py`](https://github.com/rodolfonobrega/antflow/blob/main/examples/custom_dashboard.py)
+> - **Callbacks:** [`examples/custom_dashboard_callbacks.py`](https://github.com/rodolfonobrega/antflow/blob/main/examples/custom_dashboard_callbacks.py)
+
+### How Polling Works (DashboardProtocol)
+
+When you use `DashboardProtocol` (via `custom_dashboard`, `dashboard`, or `progress` parameters), AntFlow starts a background task that:
+
+1. **Calls `get_dashboard_snapshot()`** - Reads current pipeline state (worker states, metrics, stats)
+2. **Calls `display.on_update(snapshot)`** - Updates your dashboard with the snapshot
+3. **Sleeps for `dashboard_update_interval` seconds** (default: 0.5s)
+4. **Repeats** until the pipeline finishes
+
+```python
+# Internally, this is what happens:
+async def _monitor_progress(display, total_items, update_interval=0.5):
+    while True:
+        snapshot = pipeline.get_dashboard_snapshot()  # Read current state
+        display.on_update(snapshot)                   # Update UI
+        await asyncio.sleep(update_interval)          # Wait
+```
+
+**Key Points:**
+- ✅ **Efficient:** Snapshots just read existing state - no new objects created
+- ✅ **No Empty Events:** Every update has current state to display
+- ✅ **Configurable:** Adjust `dashboard_update_interval` to balance responsiveness vs CPU usage
+- ✅ **Automatic Cleanup:** Task is cancelled immediately when pipeline finishes
+
+### Configuring Update Interval
+
+You can control how often the dashboard updates:
+
+```python
+# Default: 0.5 seconds (2 updates per second)
+results = await pipeline.run(items, dashboard="detailed")
+
+# Faster updates (5 updates per second) - more responsive but higher CPU
+results = await pipeline.run(items, dashboard="detailed", dashboard_update_interval=0.2)
+
+# Slower updates (1 update per second) - lower CPU usage
+results = await pipeline.run(items, dashboard="detailed", dashboard_update_interval=1.0)
+
+# Very fast updates (10 updates per second) - only for debugging
+results = await pipeline.run(items, dashboard="detailed", dashboard_update_interval=0.1)
+```
+
+**Recommended Values:**
+- **0.1s** - Very responsive, good for debugging (10 updates/sec)
+- **0.2s** - Fast updates, good for development (5 updates/sec)
+- **0.5s** - Default, balanced (2 updates/sec) ⭐
+- **1.0s** - Slower, lower CPU usage (1 update/sec)
+
+**When to Use Lower Intervals:**
+- Debugging fast-running pipelines
+- When you need to see every state change
+- Development and testing
+
+**When to Use Higher Intervals:**
+- Long-running production pipelines
+- When CPU usage is a concern
+- When you only need periodic status checks
+
 ## DashboardProtocol
 
 The protocol defines three methods:
@@ -496,6 +559,15 @@ class MultiStageDashboard:
 ```
 
 ## Alternative: StatusTracker Callbacks (Event-Driven)
+
+> [!TIP]
+> **See a complete working example:** [`examples/monitoring_status_tracker.py`](https://github.com/rodolfonobrega/antflow/blob/main/examples/monitoring_status_tracker.py)
+> 
+> This example demonstrates:
+> - `on_status_change` callback for item-level events
+> - `on_task_*` callbacks for task-level monitoring (start, complete, retry, fail)
+> - Real-time polling with `get_stats()`
+> - Query methods: `get_status()`, `get_by_status()`, `get_history()`
 
 For event-driven monitoring (instead of polling), use `StatusTracker` callbacks:
 
