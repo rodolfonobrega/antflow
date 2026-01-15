@@ -106,6 +106,7 @@ You have 1000 jobs to process using OpenAI's Batch API.
 The process is: `Generate -> Upload -> Start Job -> Poll -> Download`.
 
 **The Constraints:**
+
 1.  **Strict Upload Limit:** You can only upload **2 files** at the same time (rate limit).
 2.  **Batch Queue Capacity:** You can have **max 50 active jobs** running in the Batch API at once.
 
@@ -144,45 +145,39 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-### Architecture Comparison: Why not 2 Stages?
+**Architecture Comparison: Two Stages vs. Single Stage**
 
-You might think: *"Why not just use a GeneratorStage (2 workers) feeding into a PollingStage (50 workers)?"*
+Previously, users were forced to use a single stage with task limits to avoid the "firehose" effect. With the introduction of **Automatic Backpressure**, both approaches are now viable.
 
-**Scenario A: Two Stages (The "Firehose" Risk) ❌**
+### Option A: Two Stages (Recommended for Clarity) ✅
 
 ```python
-# ❌ DON'T DO THIS for this scenario
-stage_gen = Stage("Generator", workers=2, tasks=[generate, upload])
-stage_poll = Stage("Polling", workers=50, tasks=[poll])
-
-# Problem: stage_gen is faster than stage_poll.
-# It will pump 1000 jobs into stage_poll's queue.
-# Result: 950 jobs running on OpenAI, unmonitored in the queue.
+# ✅ Highly recommended: Separates concerns
+stage_upload = Stage("Upload", workers=2, tasks=[upload])
+stage_poll = Stage("Polling", workers=50, tasks=[poll], queue_capacity=1)
 ```
 
-*   **Structure**: `GeneratorStage (2 workers)` -> `PollingStage (50 workers)`.
-*   **Behavior**: The `GeneratorStage` continuously produces jobs (2 at a time) and pushes them to `PollingStage`.
-*   **The Problem**: If `PollingStage` is full (50 jobs running), the `GeneratorStage` *keeps going*. It might start 750 jobs on OpenAI.
-*   **Result**: You have 750 jobs running on OpenAI, but only 50 workers "watching" them. 700 jobs are running unmonitored. If they fail or finish, you won't know until a worker frees up.
+*   **Structure**: `UploadStage (2 workers)` -> `PollingStage (50 workers)`.
+*   **Behavior**: With `queue_capacity=1`, the `Upload` stage will block once the `Polling` stage is busy.
+*   **Total "Active" Jobs**: 2 (uploading) + 1 (queued) + 50 (polling) = 53 jobs max.
+*   **Result**: Clean separation of logic. Your uploaders are dedicated to uploading, and your pollers are dedicated to polling. Backpressure ensures you never exceed the OpenAI capacity.
 
-**Scenario B: Single Stage + Limits (The "Bounded" Solution) ✅**
+### Option B: Single Stage + Task Limits (Compact) ✅
 
 ```python
-# ✅ DO THIS
+# ✅ Also works well
 stage = Stage(
     "Combined", 
     workers=50, 
-    tasks=[generate, upload, poll],
+    tasks=[upload, poll],
     task_concurrency_limits={"upload": 2}
 )
 ```
 
-*   **Structure**: One Stage (50 workers) with `limit={upload: 2}`.
-*   **Behavior**: When all 50 workers are busy polling, *no new upload tasks can start*.
-*   **The Result**:
-    *   Max **50 jobs** are running on OpenAI at any time.
-    *   Job #51 stays in the input queue. It is **not generated, not uploaded, and not started**.
-    *   This provides true **Backpressure**. You usually want this to avoid overwhelming the external system or your own monitoring capacity.
+*   **Structure**: One Stage (50 workers total) with `limit={upload: 2}`.
+*   **Behavior**: When all 50 workers are busy polling, no new upload tasks can start. 
+*   **Total "Active" Jobs**: Strictly capped at 50.
+*   **Result**: Fewer stages to manage. However, if all 50 workers are stuck polling, no one can start a new upload even if the rate limit allows it.
 
 ### Automatic Backpressure (Smart Limits)
 

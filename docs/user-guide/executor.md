@@ -287,33 +287,33 @@ async with AsyncExecutor(max_workers=5) as executor:
     )
 ```
 
-## Concurrency Limits
+## Advanced Concurrency Control
 
-You can limit the number of concurrent executions for specific tasks using semaphores, which is useful for rate limiting.
-
-For a detailed overview of all concurrency options, see the [Concurrency Control Guide](concurrency.md).
+While `max_workers` provides a global limit, you can achieve more granular control using **Semaphores**. This is useful when you have a high worker count for general tasks but need to throttle specific operations (like database writes or API calls).
 
 ### Using Semaphores with submit()
 
-Use `semaphore` to share a concurrency limit across multiple submit calls:
+The `submit()` method accepts an optional `semaphore` parameter. This allows multiple task submissions to share a single concurrency limit, independent of the total worker pool.
 
 ```python
 import asyncio
 from antflow import AsyncExecutor
 
-# Create a semaphore for rate limiting
+# 1. Create a shared semaphore
 api_limit = asyncio.Semaphore(10)
 
 async with AsyncExecutor(max_workers=100) as executor:
-    futures = []
-    for item in items:
-        # Share the semaphore across tasks
-        f = executor.submit(api_call, item, semaphore=api_limit)
-        futures.append(f)
-
-    # Wait for results
-    results = [await f.result() for f in futures]
+    # 2. These tasks share the same 'api_limit' semaphore
+    # They will never exceed 10 concurrent executions
+    futures = [
+        executor.submit(api_call, item, semaphore=api_limit) 
+        for item in items
+    ]
+    
+    results = await asyncio.gather(*[f.result() for f in futures])
 ```
+
+For a comprehensive guide on all concurrency options in AntFlow, including task-level limits in Pipelines, see the [Concurrency Control Guide](concurrency.md).
 
 ## AsyncFuture
 
