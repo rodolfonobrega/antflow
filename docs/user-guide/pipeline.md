@@ -145,30 +145,39 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-**Architecture Comparison: Two Stages vs. Single Stage**
+**Architecture Comparison: Which approach should you use?**
 
-Previously, users were forced to use a single stage with task limits to avoid the "firehose" effect. With the introduction of **Automatic Backpressure**, both approaches are now viable.
+At first glance, you might think: *"If AntFlow has automatic backpressure, I can just separate everything into different stages and let the system handle it, right?"*
 
-### Option A: Two Stages (Visual Separation Only) ⚠️
+Well, the answer is: **It depends on how strict your limits are.**
+
+### Option A: The "Obvious" Way (Two Stages) ⚠️
+
+You might decide to separate the logic into two stages to keep things clean. After all, uploading and polling are different concerns.
 
 ```python
-# ⚠️ WARNING: Contains unmonitored buffer items
+# ⚠️ WARNING: The "clean" way that hides a technical trap
 stage_upload = Stage("Upload", workers=2, tasks=[upload])
 stage_poll = Stage("Polling", workers=50, tasks=[poll], queue_capacity=1)
 ```
 
-*   **Structure**: `UploadStage` -> `PollingStage`.
-*   **The Flaw**: Every stage needs an input queue. Even with `queue_capacity=1`, you have a buffer.
-*   **The Math**: 50 workers + 1 queue slot = **51 active jobs**. 
-*   **The Risk**: One job has already been uploaded by Stage A, but it is sitting in Stage B's queue waiting for a worker. **This job is active on OpenAI but is NOT being monitored.**
-*   **Verdict**: ❌ **Not recommended for strict limits.** While it looks cleaner in code, it is technically less precise.
+**The logic seems sound:** You have 2 workers dedicated to uploading and 50 dedicated to polling. Since you set `queue_capacity=1`, you expect the uploaders to stop once the polling stage is full.
 
-### Option B: Single Stage + Task Limits (The Correct Way) 🏆
+**But here is the catch:**
+*   **The Hidden Item:** Every stage must have an input queue. Even with `capacity=1`, you have a "waiting room" slot.
+*   **The Math:** 50 workers (polling) + 1 queue slot = **51 active jobs on OpenAI**.
+*   **The Danger:** The item in the queue has already been successfully uploaded by Stage A, but it is waiting for a Polling worker to become free. **For OpenAI, that job is running. For your pipeline, it is currently unmonitored.**
 
-This is the recommended approach for absolute precision.
+**Verdict:** ❌ **Risky.** This approach is "cleaner" in code but technically less precise. Use it only if being "off-by-one" (or off-by-N) isn't a problem for your API limits.
+
+---
+
+### Option B: The "Correct" Way (Single Stage + Task Limits) 🏆
+
+This is the recommended approach for professional production pipelines where limits are non-negotiable.
 
 ```python
-# 🏆 BEST PRACTICE: Zero unmonitored items
+# 🏆 BEST PRACTICE: 100% Precision
 stage = Stage(
     "Combined", 
     workers=50, 
@@ -177,11 +186,12 @@ stage = Stage(
 )
 ```
 
-*   **Structure**: One Stage (Exactly 50 workers).
-*   **The Logic**: A worker only fetches a new item when it is 100% free. 
-*   **The Math**: Total items in flight = **Exactly 50**.
-*   **The Benefit**: There is **zero internal queue** between the upload and the poll. As soon as the upload finishes, the same worker immediately starts polling. No item ever sits idle and unmonitored.
-*   **Verdict**: ✅ **Recommended for Production.** This ensures 100% compliance with external API limits.
+**Why this is superior:**
+*   **No Buffers:** There is no internal queue between the `upload` and the `poll`. They happen sequentially inside the same worker.
+*   **Total Control:** A worker only fetches a new item from the source when it is 100% free. If you have 50 workers, you have **exactly 50 jobs** in flight. No more, no less.
+*   **Zero Gap:** As soon as a file is uploaded, that specific worker immediately starts monitoring it. No job ever sits "unattended" in a queue.
+
+**Verdict:** ✅ **Winner.** This is the most robust way to ensure 100% compliance with external API constraints.
 
 ---
 
